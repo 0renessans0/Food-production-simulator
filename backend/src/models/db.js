@@ -1,18 +1,15 @@
 const pool = require('../config/database');
 
-// Получить технический регламент
 async function getRegulations() {
     const result = await pool.query('SELECT * FROM Regulations WHERE id = 1');
     return result.rows[0];
 }
 
-// Получить правила игры
 async function getGameRules() {
     const result = await pool.query('SELECT * FROM GameRules WHERE id = 1');
     return result.rows[0];
 }
 
-// Сохранить результат игры
 async function saveResult(session_id, regulation_id, rules_id, grade, error_report) {
     const result = await pool.query(
         `INSERT INTO GameResults (session_id, regulation_id, rules_id, grade, error_report) 
@@ -31,6 +28,14 @@ async function getAllResults() {
         ORDER BY gr.timestamp DESC
     `);
     return result.rows;
+}
+
+async function getRegulations() {
+    const result = await pool.query('SELECT * FROM Regulations WHERE id = 1');
+    if (!result.rows[0]) {
+        throw new Error('регламент не найден в бд');
+    }
+    return result.rows[0];
 }
 
 module.exports = { getRegulations, getGameRules, saveResult, getAllResults };

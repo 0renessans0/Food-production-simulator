@@ -9,14 +9,17 @@ const pool = new Pool({
     database: process.env.DB_NAME,
 });
 
-// Проверка подключения
 pool.connect((err, client, release) => {
     if (err) {
-        console.error('Ошибка подключения к PostgreSQL:', err.message);
+        console.error('не подключено к бд:', err.message);
     } else {
-        console.log('Подключено к PostgreSQL');
+        console.log('бд подключена');
         release();
     }
+});
+
+pool.on('error', (err) => {
+    console.error('ошибка пула БД:', err.message);
 });
 
 module.exports = pool;
