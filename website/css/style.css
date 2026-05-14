@@ -1,0 +1,327 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-image: url('../images/hero-bg.jpg');
+    background-size: cover;
+    background-attachment: fixed;
+    background-position: center;
+    background-repeat: no-repeat;
+    color: white;
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header — фиксированная высота, логотип слева, меню растянуто */
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 40px;
+    background-color: transparent;
+}
+
+.logo {
+    flex-shrink: 0;
+}
+
+.logo-img {
+    width: 150px;
+    height: 150px;
+    background: #f5f5dc;
+    border-radius: 50%;
+    padding: 5px;
+    object-fit: cover;
+}
+
+/* Меню занимает всё оставшееся пространство */
+nav {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+nav ul {
+    list-style: none;
+    display: flex;
+    justify-content: space-evenly;
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 0;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    font-size: 20px;
+    font-weight: 500;
+    padding: 8px 0;
+    border-bottom: 2px solid rgba(63, 97, 50, 1);
+    transition: 0.3s;
+}
+
+nav a:hover {
+    color: rgba(204, 161, 3, 1);
+    border-bottom-color: rgba(63, 97, 50, 1);
+}
+
+nav a.active {
+    color: white;
+    border-bottom-color: rgba(63, 97, 50, 1);
+}
+
+/* Главная страница (Игра) */
+.hero {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+}
+
+.hero-content h2 {
+    font-size: 48px;
+    margin-bottom: 20px;
+}
+
+.white-line {
+    width: 100px;
+    height: 2px;
+    background: white;
+    margin: 20px auto;
+}
+
+.btn-excursion {
+    background: rgba(63, 97, 50, 1);
+    color: rgba(204, 161, 3, 1);
+    border: none;
+    padding: 12px 30px;
+    font-size: 18px;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: 0.3s;
+    margin-top: 20px;
+}
+
+.btn-excursion:hover {
+    background: rgba(204, 161, 3, 1);
+    color: rgba(63, 97, 50, 1);
+    transform: scale(1.05);
+}
+
+/* Страница истории */
+.history-page {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 160px);
+    padding: 20px;
+}
+
+.history-content {
+    max-width: 800px;
+    width: 90%;
+    margin: 0 auto;
+    background: rgba(63, 97, 50, 0.5);
+    padding: 40px;
+    border-radius: 15px;
+    color: white;
+    text-align: left;
+}
+
+.history-content h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.history-content p {
+    margin-bottom: 15px;
+}
+
+.history-content ul, .history-content ol {
+    margin: 15px 0;
+    padding-left: 20px;
+}
+
+/* Страница экскурсий */
+.excursions-page {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.excursions-title {
+    font-size: 32px;
+    margin-bottom: 40px;
+    color: white;
+}
+
+.excursions-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 60px;
+    flex-wrap: wrap;
+}
+
+.excursion-column {
+    text-align: center;
+    min-width: 220px;
+}
+
+.excursion-rectangle {
+    background: rgba(63, 97, 50, 1);
+    padding: 15px 30px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+}
+
+.excursion-rectangle h3 {
+    font-size: 28px;
+    color: white;
+    margin: 0;
+}
+
+/* Ёлочка из кругов */
+.circles-tree {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.circles-row {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.circle {
+    background: rgba(63, 97, 50, 1);
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: bold;
+    color: white;
+}
+
+/* Пустой круг-заглушка (невидимый для сохранения формы) */
+.circle-placeholder {
+    width: 20px;
+    height: 20px;
+    visibility: hidden;
+}
+
+.vertical-line {
+    width: 2px;
+    height: 200px;
+    background: white;
+    margin: 0 20px;
+}
+
+/* Ряд с двумя кругами (по краям) */
+.circles-row.two-circles {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    gap: 0;
+}
+
+.circles-row.two-circles .circle {
+    margin: 0;
+}
+
+/* Ряд с одним кругом по центру */
+.circles-row.one-circle {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+}
+
+/* Пустой круг-заглушка (невидимый, но сохраняет размер) */
+.circle-placeholder {
+    width: 50px;
+    height: 50px;
+    visibility: hidden;
+}
+
+/* Чтобы ряды с 3 кругами не растягивались */
+.circles-row {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+@media (max-width: 768px) {
+    .circle, .circle-placeholder {
+        width: 55px;
+        height: 55px;
+    }
+}
+
+/* Footer */
+footer {
+    background: rgba(63, 97, 50, 1);
+    color: rgba(204, 161, 3, 1);
+    padding: 15px 20px;
+    margin-top: auto;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+}
+
+.logo-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Адаптация под мобильные */
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px;
+    }
+    nav ul {
+        justify-content: center;
+        gap: 20px;
+    }
+    nav a {
+        font-size: 16px;
+    }
+    .hero-content h2 {
+        font-size: 32px;
+    }
+    .vertical-line-container {
+        flex-direction: column;
+    }
+    .vertical-line {
+        width: 200px;
+        height: 2px;
+    }
+    .history-content {
+        width: 95%;
+        padding: 20px;
+    }
+}
