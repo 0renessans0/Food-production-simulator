@@ -8,5 +8,20 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/StartScen.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02
+  - enabled: 1
+    path: Assets/Scenes/AcceptenceScen.unity
+    guid: 31f18268a4f9c0a4d8594b6bfebcd334
+  - enabled: 1
+    path: Assets/Scenes/MixingScen.unity
+    guid: dc475076e798ee8459d44bcd72e88612
+  - enabled: 1
+    path: Assets/Scenes/FermentationScen.unity
+    guid: 0353ba56fa30d8543a6388693a91ce2c
+  - enabled: 1
+    path: Assets/Scenes/PackagingScen.unity
+    guid: bf24414334bc35f4ea38c4cb0fed4132
+  - enabled: 1
+    path: Assets/Scenes/ResultScen.unity
+    guid: fc8061b01d301e24f8d5329f7ad0149b
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
