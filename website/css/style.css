@@ -18,7 +18,6 @@ body {
     flex-direction: column;
 }
 
-/* Header — фиксированная высота, логотип слева, меню растянуто */
 header {
     display: flex;
     align-items: center;
@@ -40,7 +39,6 @@ header {
     object-fit: cover;
 }
 
-/* Меню занимает всё оставшееся пространство */
 nav {
     flex: 1;
     display: flex;
@@ -77,7 +75,6 @@ nav a.active {
     border-bottom-color: rgba(63, 97, 50, 1);
 }
 
-/* Главная страница (Игра) */
 .hero {
     flex: 1;
     display: flex;
@@ -117,7 +114,6 @@ nav a.active {
     transform: scale(1.05);
 }
 
-/* Страница истории */
 .history-page {
     flex: 1;
     display: flex;
@@ -152,7 +148,6 @@ nav a.active {
     padding-left: 20px;
 }
 
-/* Страница экскурсий */
 .excursions-page {
     flex: 1;
     display: flex;
@@ -195,7 +190,6 @@ nav a.active {
     margin: 0;
 }
 
-/* Ёлочка из кругов */
 .circles-tree {
     display: flex;
     flex-direction: column;
@@ -222,7 +216,6 @@ nav a.active {
     color: white;
 }
 
-/* Пустой круг-заглушка (невидимый для сохранения формы) */
 .circle-placeholder {
     width: 20px;
     height: 20px;
@@ -236,7 +229,6 @@ nav a.active {
     margin: 0 20px;
 }
 
-/* Ряд с двумя кругами (по краям) */
 .circles-row.two-circles {
     display: flex;
     justify-content: space-between;
@@ -248,21 +240,18 @@ nav a.active {
     margin: 0;
 }
 
-/* Ряд с одним кругом по центру */
 .circles-row.one-circle {
     display: flex;
     justify-content: center;
     gap: 0;
 }
 
-/* Пустой круг-заглушка (невидимый, но сохраняет размер) */
 .circle-placeholder {
     width: 50px;
     height: 50px;
     visibility: hidden;
 }
 
-/* Чтобы ряды с 3 кругами не растягивались */
 .circles-row {
     display: flex;
     justify-content: center;
@@ -276,7 +265,6 @@ nav a.active {
     }
 }
 
-/* Footer */
 footer {
     background: rgba(63, 97, 50, 1);
     color: rgba(204, 161, 3, 1);
@@ -296,32 +284,3 @@ footer {
     color: inherit;
 }
 
-/* Адаптация под мобильные */
-@media (max-width: 768px) {
-    header {
-        flex-direction: column;
-        gap: 15px;
-        padding: 15px;
-    }
-    nav ul {
-        justify-content: center;
-        gap: 20px;
-    }
-    nav a {
-        font-size: 16px;
-    }
-    .hero-content h2 {
-        font-size: 32px;
-    }
-    .vertical-line-container {
-        flex-direction: column;
-    }
-    .vertical-line {
-        width: 200px;
-        height: 2px;
-    }
-    .history-content {
-        width: 95%;
-        padding: 20px;
-    }
-}

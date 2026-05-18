@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0626585b6546ad24eb398d013b4156a5, type: 3}
   m_Name: Item_Water
   m_EditorClassIdentifier: Assembly-CSharp::Item
+  id: 9
   itemName: "\u0412\u043E\u0434\u0430"
   itemType: 3
-  icon: {fileID: 0}
+  icon: {fileID: -5755541774972867788, guid: 4cec6585701fac94e953b8a03454f6ce, type: 3}
   maxStackSize: 99

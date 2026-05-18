@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0626585b6546ad24eb398d013b4156a5, type: 3}
   m_Name: Item_Malt
   m_EditorClassIdentifier: Assembly-CSharp::Item
-  itemName: "\u0425\u043C\u0435\u043B\u044C"
+  id: 6
+  itemName: "\u0421\u043E\u043B\u043E\u0434"
   itemType: 4
-  icon: {fileID: 0}
+  icon: {fileID: -353927507242968233, guid: c808c8739e31e3b448a83a2584fcc49f, type: 3}
   maxStackSize: 99

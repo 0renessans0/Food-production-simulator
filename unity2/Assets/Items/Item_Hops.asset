@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0626585b6546ad24eb398d013b4156a5, type: 3}
   m_Name: Item_Hops
   m_EditorClassIdentifier: Assembly-CSharp::Item
+  id: 5
   itemName: "\u0425\u043C\u0435\u043B\u044C"
   itemType: 2
-  icon: {fileID: 0}
+  icon: {fileID: 4997092913536195946, guid: f290f94326a1c6a4bb2ae08f00da8a5a, type: 3}
   maxStackSize: 99

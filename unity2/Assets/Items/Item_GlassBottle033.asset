@@ -12,8 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0626585b6546ad24eb398d013b4156a5, type: 3}
   m_Name: Item_GlassBottle033
   m_EditorClassIdentifier: Assembly-CSharp::Item
+  id: 4
   itemName: "\u0421\u0442\u0435\u043A\u043B\u044F\u043D\u043D\u0430\u044F \u0431\u0443\u0442\u044B\u043B\u043A\u0430
     0,33\u043B"
   itemType: 5
-  icon: {fileID: 0}
+  icon: {fileID: 5272224787363936376, guid: 8770da1c8c36bb14fba48589acbfe508, type: 3}
   maxStackSize: 99

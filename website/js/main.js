@@ -1,8 +1,3 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const btn = document.getElementById('startSimulator');
-    if (btn) {
-        btn.addEventListener('click', function() {
-            window.location.href = 'excursions.html';
-        });
-    }
+document.getElementById('startSimulator').addEventListener('click', function() {
+    window.location.href = '../unity-game/index.html';
 });

@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0626585b6546ad24eb398d013b4156a5, type: 3}
   m_Name: Item_Barley
   m_EditorClassIdentifier: Assembly-CSharp::Item
+  id: 1
   itemName: "\u042F\u0447\u043C\u0435\u043D\u044C"
   itemType: 1
-  icon: {fileID: 0}
+  icon: {fileID: 5459196739673720792, guid: 3a21c9fd130f12a44b661797d804b22b, type: 3}
   maxStackSize: 99

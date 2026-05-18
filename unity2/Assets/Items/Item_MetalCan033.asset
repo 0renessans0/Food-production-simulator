@@ -12,8 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0626585b6546ad24eb398d013b4156a5, type: 3}
   m_Name: Item_MetalCan033
   m_EditorClassIdentifier: Assembly-CSharp::Item
+  id: 8
   itemName: "\u041C\u0435\u0442\u0430\u043B\u043B\u0438\u0447\u0435\u0441\u043A\u0430\u044F
     \u0431\u0430\u043D\u043A\u0430 0,33\u043B"
   itemType: 7
-  icon: {fileID: 0}
+  icon: {fileID: -4414434892273265379, guid: a7bc90704ef811c449210dff10c03a5f, type: 3}
   maxStackSize: 99
