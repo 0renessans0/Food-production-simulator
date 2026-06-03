@@ -16,6 +16,7 @@ public class PackagingManager : MonoBehaviour
 
     void Start()
     {
+        UIManager.Instance.FindPanelsOnCurrentScene();
         emptyBox.SetActive(true);
         boxWithBottles.SetActive(false);
         boxWithLabel.SetActive(false);

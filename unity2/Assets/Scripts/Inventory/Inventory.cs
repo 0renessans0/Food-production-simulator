@@ -221,16 +221,23 @@ public class Inventory : MonoBehaviour
 }
 
     public void SelectSlot(int slotIndex)
+{
+    if (slotIndex == -1)
     {
-        if (slotIndex < 0 || slotIndex >= items.Count)
-        {
-            Debug.LogError($"SelectSlot: индекс {slotIndex} вне диапазона (0-{items.Count - 1})");
-            return;
-        }
-        
-        selectedSlot = slotIndex;
-        Debug.Log($"Выбран слот {slotIndex}, предмет: {items[slotIndex].itemData?.itemName}");
+        selectedSlot = -1;
+        Debug.Log("слот сброшен");
+        return;
     }
+    
+    if (slotIndex < 0 || slotIndex >= items.Count)
+    {
+        Debug.LogError($"индекс {slotIndex} вне диапазона (0-{items.Count - 1})");
+        return;
+    }
+    
+    selectedSlot = slotIndex;
+    Debug.Log($"выбран слот {slotIndex}, предмет: {items[slotIndex].itemData?.itemName}");
+}
 
     public int GetSelectedSlot()
     {

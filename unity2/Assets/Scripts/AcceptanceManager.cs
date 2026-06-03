@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement; 
+using UnityEngine.UI;  
 
 public class AcceptanceManager : MonoBehaviour
 {
@@ -19,8 +20,17 @@ void Start()
             inventory = FindAnyObjectByType<Inventory>();
     }
     
-    Debug.Log($"AcceptanceManager: uiManager = {(uiManager != null ? "найден" : "НЕ НАЙДЕН")}");
-    Debug.Log($"AcceptanceManager: inventory = {(inventory != null ? "найден" : "НЕ НАЙДЕН")}");
+    // привязываем кнопку в коде
+    Button continueButton = GameObject.Find("ContinueButton")?.GetComponent<Button>();
+    if (continueButton != null)
+    {
+        continueButton.onClick.RemoveAllListeners();
+        continueButton.onClick.AddListener(() => CheckStage());
+        Debug.Log("кнопка continue привязана к checkstage");
+    }
+    
+    Debug.Log($"AcceptanceManager: uiManager = {(uiManager != null ? "найден" : "не найден")}");
+    Debug.Log($"AcceptanceManager: inventory = {(inventory != null ? "найден" : "не найден")}");
 }
 
     public void CheckStage()
@@ -97,6 +107,6 @@ public void NextScene()
     
     Debug.Log($"После SaveItems: savedItems.Count = {Inventory.Instance.savedItems.Count}");
     
-    SceneManager.LoadScene("MixingScen");
+    SceneManager.LoadScene("2");
 }
 }

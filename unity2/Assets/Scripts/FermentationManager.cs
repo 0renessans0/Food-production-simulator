@@ -20,7 +20,8 @@ public class FermentationManager : MonoBehaviour
 
     void Start()
     {
-        Debug.Log("=== СЦЕНА БРОЖЕНИЯ ===");
+        Debug.Log("=== сцена брожения ===");
+        UIManager.Instance.FindPanelsOnCurrentScene();
         
         // Восстанавливаем инвентарь
         Transform panel = GameObject.Find("InventoryPanel")?.transform;
@@ -39,33 +40,29 @@ public class FermentationManager : MonoBehaviour
                         Inventory.Instance.items[i].itemData = saved[i].itemData;
                         Inventory.Instance.items[i].count = saved[i].count;
                         Inventory.Instance.UpdateSlotUI(i);
-                        Debug.Log($"✅ Восстановлен {saved[i].itemData.itemName} в слот {i}");
+                        Debug.Log($" Восстановлен {saved[i].itemData.itemName} в слот {i}");
                     }
                 }
             }
         }
         
-        // Обновляем отображение значений
         UpdateTempDisplay();
         UpdateTimeDisplay();
 
-        // Слушаем изменения слайдеров
         if (temperatureSlider != null)
             temperatureSlider.onValueChanged.AddListener((v) => UpdateTempDisplay());
         if (timeSlider != null)
             timeSlider.onValueChanged.AddListener((v) => UpdateTimeDisplay());
         
-        // Привязываем кнопку перехода
         Button nextButton = GameObject.Find("Button_ToPackaging")?.GetComponent<Button>();
         if (nextButton != null)
         {
             nextButton.onClick.RemoveAllListeners();
             nextButton.onClick.AddListener(() => CheckAndNext());
-            Debug.Log("✅ Кнопка 'Button_ToPackaging' привязана к CheckAndNext()");
         }
         else
         {
-            Debug.LogError("❌ Кнопка 'Button_ToPackaging' не найдена! Проверьте имя кнопки.");
+            Debug.LogError("кнопка 'Button_ToPackaging' не найдена");
         }
     }
 
@@ -83,11 +80,11 @@ public class FermentationManager : MonoBehaviour
 
     public void CheckAndNext()
     {
-        Debug.Log($"🔍 CheckAndNext() ВЫЗВАН! Переход на сцену: {nextScene}");
+        Debug.Log($"CheckAndNext() вызван Переход на сцену: {nextScene}");
         
         if (temperatureSlider == null || timeSlider == null)
         {
-            Debug.LogError("❌ Слайдеры не назначены в инспекторе!");
+            Debug.LogError("Слайдеры не назначены в инспекторе!");
             SceneManager.LoadScene(nextScene);
             return;
         }
@@ -107,14 +104,13 @@ public class FermentationManager : MonoBehaviour
             if (ErrorManager.Instance != null)
                 ErrorManager.Instance.AddError($"Брожение: {error}");
             
-            Debug.Log($"❌ Ошибка брожения: {error}");
+            Debug.Log($"Ошибка брожения: {error}");
         }
         else
         {
-            Debug.Log("✅ Параметры брожения в норме");
+            Debug.Log("Параметры брожения в норме");
         }
         
-        // Сохраняем инвентарь и переходим
         if (Inventory.Instance != null)
             Inventory.Instance.SaveItems();
         

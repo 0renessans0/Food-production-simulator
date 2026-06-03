@@ -22,7 +22,7 @@ public class ErrorManager : MonoBehaviour
     public void AddError(string error)
     {
         errors.Add(error);
-        Debug.Log($"❌ Ошибка добавлена: {error}");
+        Debug.Log($"Ошибка добавлена: {error}");
     }
 
     public void ClearErrors()

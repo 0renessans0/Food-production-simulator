@@ -3,45 +3,61 @@ using UnityEngine;
 public class KettleClick : MonoBehaviour
 {
     public MixingManager mixingManager;
+    public Inventory inventory;
+
+    void Start()
+    {
+        if (mixingManager == null)
+            mixingManager = FindAnyObjectByType<MixingManager>();
+        
+        if (inventory == null)
+        {
+            inventory = Inventory.Instance;
+            if (inventory == null)
+                inventory = FindAnyObjectByType<Inventory>();
+        }
+        
+        Debug.Log($"kettle click: mixing manager = {(mixingManager != null ? "найден" : "не найден")}");
+        Debug.Log($"kettle click: inventory = {(inventory != null ? "найден" : "не найден")}");
+    }
 
     public void OnKettleClick()
     {
-        Debug.Log("🔨 Котёл (UI) нажат!");
+        if (inventory == null)
+        {
+            Debug.LogError("inventory равен null");
+            return;
+        }
         
-        // Находим Inventory на сцене
-        Inventory inventory = FindAnyObjectByType<Inventory>();
-    if (inventory == null)
-    {
-        Debug.LogError("❌ Inventory не найден на сцене!");
-        return;
-    }
-    
-    int selectedSlot = inventory.GetSelectedSlot();
-    Debug.Log($"Выбранный слот: {selectedSlot}");
-    
-    if (selectedSlot != -1)
-    {
-        inventory.SelectSlot(-1);  
-    }
+        int selectedSlot = inventory.GetSelectedSlot();
+        
+        if (selectedSlot == -1)
+        {
+            Debug.Log("сначала выберите ингредиент в инвентаре");
+            return;
+        }
 
         if (selectedSlot >= 4) 
         {
-            Debug.Log("❌ Это не ингредиент для замеса (нужны слоты 0-3)!");
+            Debug.Log($"слот {selectedSlot} не является ингредиентом для замеса");
+            return;
+        }
+
+        if (selectedSlot >= inventory.items.Count)
+        {
+            Debug.Log($"слот {selectedSlot} вне диапазона");
             return;
         }
 
         if (inventory.items[selectedSlot].itemData == null || inventory.items[selectedSlot].count == 0)
         {
-            Debug.Log("❌ В выбранном слоте нет ингредиента!");
+            Debug.Log($"в слоте {selectedSlot} нет ингредиента");
             return;
         }
 
-        if (mixingManager == null)
-        {
-            mixingManager = FindAnyObjectByType<MixingManager>();
-        }
-        
         mixingManager.AddIngredientFromSlot(selectedSlot);
-        inventory.SelectSlot(-1);
+        
+        if (selectedSlot != -1)
+            inventory.SelectSlot(-1);
     }
 }

@@ -1,145 +1,191 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI; 
-using TMPro;  
+using TMPro;
+using System.Collections;
+using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
+    public static UIManager Instance;
+    
     public GameObject successPanel;
     public GameObject errorPanel;
     public TMP_Text successText;
     public TMP_Text errorText;
 
     private string nextSceneName;
-    private string currentStageName;
-    private string errorStageName;
 
+    void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
 
-    
     void Start()
     {
-        FindPanels();
-        
-        if (successPanel != null)
-            successPanel.SetActive(false);
-        else
-            Debug.LogError("SuccessPanel не найден на сцене");
-        
-        if (errorPanel != null)
-            errorPanel.SetActive(false);
-        else
-            Debug.LogError("ErrorPanel не найден на сцене");
+        StartCoroutine(FindPanelsWithDelay());
+    }
+
+    System.Collections.IEnumerator FindPanelsWithDelay()
+    {
+        yield return null;
+        FindPanelsOnCurrentScene();
     }
 
     void OnEnable()
     {
-        FindPanels();
+        SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
-    void FindPanels()
-{
-    Debug.Log("FindPanels() вызван");
-    
-    if (successPanel == null)
+    void OnDisable()
     {
-        successPanel = GameObject.Find("SuccessPanel");
-        Debug.Log($"Поиск SuccessPanel: {(successPanel != null ? "найден" : "НЕ НАЙДЕН")}");
-        if (successPanel != null)
-            successText = successPanel.GetComponentInChildren<TMP_Text>();
+        SceneManager.sceneLoaded -= OnSceneLoaded;
     }
-    
-    if (errorPanel == null)
-    {
-        errorPanel = GameObject.Find("ErrorPanel");
-        Debug.Log($"Поиск ErrorPanel: {(errorPanel != null ? "найден" : "НЕ НАЙДЕН")}");
-        if (errorPanel != null)
-            errorText = errorPanel.GetComponentInChildren<TMP_Text>();
-    }
-    
-   GameObject[] allObjects = FindObjectsByType<GameObject>();
-    Debug.Log("все объекты на сцене:");
-    foreach (var obj in allObjects)
-    {
-        Debug.Log($" - {obj.name}");
-    }
-}
 
-public void ShowError(string message, string stageName)
-{
-    if (errorPanel == null)
-        errorPanel = GameObject.Find("ErrorPanel");
-    
-    if (errorText == null && errorPanel != null)
-        errorText = errorPanel.GetComponentInChildren<TMP_Text>();
-    
-    if (errorPanel == null)
+    public void FindPanelsOnCurrentScene()
     {
-        Debug.LogError("errorPanel = null создать ErrorPanel");
-        return;
-    }
-    
-    errorText.text = message;
-    errorPanel.SetActive(true);
-    Debug.Log($"ошибка на этапе {stageName}: {message}");
-}
-
-public void ShowSuccess(string message, string nextScene, string stageName)
-{
-    if (successPanel == null)
-        successPanel = GameObject.Find("SuccessPanel");
-    
-    if (successText == null && successPanel != null)
-        successText = successPanel.GetComponentInChildren<TMP_Text>();
-    
-    if (successPanel == null)
-    {
-        Debug.LogError("successPanel = null создать SuccessPanel");
-        return;
-    }
-    
-    successText.text = message;
-    nextSceneName = nextScene;
-    successPanel.SetActive(true);
-    Debug.Log($"этап {stageName} пройден");
-}
-
-     public void OnSuccessNext()
-    {
-        Debug.Log("OnSuccessNext() вызван, сохраняем инвентарь");
+        Debug.Log($"поиск панелей на сцене {SceneManager.GetActiveScene().name}");
         
-        if (Inventory.Instance != null)
+        Canvas[] canvases = FindObjectsByType<Canvas>();
+        successPanel = null;
+        errorPanel = null;
+        
+        foreach (Canvas canvas in canvases)
         {
-            Inventory.Instance.SaveItems();
-            Debug.Log($"Сохранено предметов: {Inventory.Instance.savedItems.Count}");
+            foreach (Transform child in canvas.transform)
+            {
+                if (child.name == "SuccessPanel")
+                {
+                    successPanel = child.gameObject;
+                    Debug.Log("success panel найден");
+                    
+                    Button nextButton = successPanel.transform.Find("NextButton")?.GetComponent<Button>();
+                    if (nextButton != null)
+                    {
+                        nextButton.onClick.RemoveAllListeners();
+                        nextButton.onClick.AddListener(() => OnSuccessNext());
+                        Debug.Log("кнопка next привязана");
+                    }
+                }
+                
+                if (child.name == "ErrorPanel")
+                {
+                    errorPanel = child.gameObject;
+                    Debug.Log("error panel найден");
+                    
+                    Button restartButton = errorPanel.transform.Find("RestartButton")?.GetComponent<Button>();
+                    if (restartButton != null)
+                    {
+                        restartButton.onClick.RemoveAllListeners();
+                        restartButton.onClick.AddListener(() => OnErrorRestart());
+                        Debug.Log("кнопка restart привязана");
+                    }
+                }
+            }
         }
         
-        successPanel.SetActive(false);
+        if (successPanel != null)
+        {
+            successText = successPanel.GetComponentInChildren<TMP_Text>();
+            successPanel.SetActive(false);
+        }
+        
+        if (errorPanel != null)
+        {
+            errorText = errorPanel.GetComponentInChildren<TMP_Text>();
+            errorPanel.SetActive(false);
+        }
+    }
+
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        Debug.Log($"сцена {scene.name} загружена");
+        FindPanelsOnCurrentScene();
+    }
+
+    public void ShowSuccess(string message, string nextScene, string stageName)
+    {
+        if (successPanel == null)
+        {
+            successPanel = GameObject.Find("SuccessPanel");
+            if (successPanel != null)
+                successText = successPanel.GetComponentInChildren<TMP_Text>();
+        }
+        
+        if (successPanel == null)
+        {
+            Debug.LogError($"success panel не найден на сцене {stageName}");
+            return;
+        }
+        
+        successText.text = message;
+        nextSceneName = nextScene;
+        successPanel.SetActive(true);
+        Debug.Log($"этап {stageName} пройден");
+    }
+
+    public void ShowError(string message, string stageName)
+    {
+        if (errorPanel == null)
+        {
+            errorPanel = GameObject.Find("ErrorPanel");
+            if (errorPanel != null)
+                errorText = errorPanel.GetComponentInChildren<TMP_Text>();
+        }
+        
+        if (errorPanel == null)
+        {
+            Debug.LogError($"error panel не найден на сцене {stageName}");
+            return;
+        }
+        
+        errorText.text = message;
+        errorPanel.SetActive(true);
+        Debug.Log($"ошибка на этапе {stageName}: {message}");
+    }
+
+    public void OnSuccessNext()
+    {
+        Debug.Log("on success next вызван");
+        
+        if (Inventory.Instance != null)
+            Inventory.Instance.SaveItems();
+        
+        if (successPanel != null)
+            successPanel.SetActive(false);
         
         if (!string.IsNullOrEmpty(nextSceneName))
         {
+            Debug.Log($"переход на сцену {nextSceneName}");
             SceneManager.LoadScene(nextSceneName);
-        }
-        else
-        {
-            Debug.LogError("nextSceneName не задан!");
         }
     }
 
     public void OnErrorRestart()
 {
-    errorPanel.SetActive(false);
+    Debug.Log("on error restart вызван");
     
-    for (int i = 0; i < 9; i++)
-    {
-        Inventory.Instance.ClearSlot(i);
-    }
-    
-    MagicBox box = FindAnyObjectByType<MagicBox>();
-    if (box != null) box.ResetBox();
-}
-
-    public void OnErrorCancel()
-    {
+    if (errorPanel != null)
         errorPanel.SetActive(false);
+    
+    for (int i = 0; i < 4; i++)
+        Inventory.Instance.ClearSlot(i);
+    
+    
+    SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+}
+    
+    System.Collections.IEnumerator RestartSceneWithDelay()
+    {
+        yield return null;
+        Debug.Log($"перезагрузка сцены {SceneManager.GetActiveScene().name}");
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 }

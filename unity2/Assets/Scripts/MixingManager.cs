@@ -4,6 +4,7 @@ using UnityEngine.SceneManagement;
 
 public class MixingManager : MonoBehaviour
 {
+    public UIManager uiManager;
     public Inventory inventory;
     public Slider progressBar;
     public string nextScene = "FermentationScen";
@@ -11,24 +12,29 @@ public class MixingManager : MonoBehaviour
 
     private int ingredientsAdded = 0;
     private int requiredIngredients = 4;
+    private bool[] ingredientUsed = new bool[4];
+    private int wrongIngredientsAdded = 0;
 
     void Start()
     {
-        Debug.Log("=== СЦЕНА ЗАМЕСА ===");
-        
+        Debug.Log("сцена замеса");
+        UIManager.Instance.FindPanelsOnCurrentScene();
+
+        if (uiManager == null)
+            uiManager = FindAnyObjectByType<UIManager>();
+
         if (inventory == null)
         {
             inventory = Inventory.Instance;
             if (inventory == null)
                 inventory = FindAnyObjectByType<Inventory>();
         }
-        
-        // Восстанавливаем инвентарь
+
         Transform panel = GameObject.Find("InventoryPanel")?.transform;
         if (panel != null && Inventory.Instance != null)
         {
             Inventory.Instance.SetInventoryPanel(panel);
-            
+
             var saved = Inventory.Instance.savedItems;
             if (saved != null && saved.Count > 0)
             {
@@ -43,20 +49,19 @@ public class MixingManager : MonoBehaviour
                 }
             }
         }
-        
+
         if (progressBar != null)
         {
             progressBar.maxValue = requiredIngredients;
-            progressBar.value = ingredientsAdded;
+            progressBar.value = 0;
         }
 
-        // Привязываем кнопку
         Button nextButton = GameObject.Find("Button_ToFermentation")?.GetComponent<Button>();
         if (nextButton != null)
         {
             nextButton.onClick.RemoveAllListeners();
-            nextButton.onClick.AddListener(() => NextScene());
-            Debug.Log("✅ Кнопка привязана к NextScene()");
+            nextButton.onClick.AddListener(() => CheckStage());
+            Debug.Log("кнопка привязана к CheckStage");
         }
     }
 
@@ -64,7 +69,7 @@ public class MixingManager : MonoBehaviour
     {
         if (ingredientsAdded >= requiredIngredients)
         {
-            Debug.Log("⚠️ Все ингредиенты уже добавлены!");
+            Debug.Log("все ингредиенты добавлены");
             return;
         }
 
@@ -75,44 +80,108 @@ public class MixingManager : MonoBehaviour
         }
 
         if (slotIndex >= inventory.items.Count) return;
-        
+
         var item = inventory.items[slotIndex].itemData;
         if (item == null || inventory.items[slotIndex].count == 0)
         {
-            Debug.Log($"❌ В слоте {slotIndex} нет ингредиента!");
+            Debug.Log($"в слоте {slotIndex} нет ингредиента");
             return;
         }
 
         if (slotIndex >= 4)
         {
-            Debug.Log($"❌ Слот {slotIndex} не является ингредиентом для замеса!");
+            wrongIngredientsAdded++;
+            inventory.ClearSlot(slotIndex);
+            Debug.Log($"добавлен не тот ингредиент: {item.itemName}");
+
+            if (ErrorManager.Instance != null)
+                ErrorManager.Instance.AddError($"замес: добавлен {item.itemName} не ингредиент");
             return;
         }
 
+        if (ingredientUsed[slotIndex])
+        {
+            Debug.Log($"ингредиент {item.itemName} уже добавлялся");
+            if (ErrorManager.Instance != null)
+                ErrorManager.Instance.AddError($"замес: повторное добавление {item.itemName}");
+            return;
+        }
+
+        ingredientUsed[slotIndex] = true;
         ingredientsAdded++;
+
         if (progressBar != null)
             progressBar.value = ingredientsAdded;
-        
+
         inventory.ClearSlot(slotIndex);
-        
-        Debug.Log($"🍺 Добавлен {item.itemName} в чан! {ingredientsAdded}/{requiredIngredients}");
+
+        Debug.Log($"добавлен {item.itemName} в чан {ingredientsAdded} из {requiredIngredients}");
+    }
+
+    public void CheckStage()
+    {
+        Debug.Log($"проверка замеса правильных={ingredientsAdded} неправильных={wrongIngredientsAdded} требуется={requiredIngredients}");
+
+        if (uiManager == null)
+        {
+            uiManager = FindAnyObjectByType<UIManager>();
+            if (uiManager == null)
+            {
+                Debug.LogError("uiManager равен null");
+                return;
+            }
+        }
+
+        bool hasError = false;
+        string errorMessage = "";
+
+        if (wrongIngredientsAdded > 0)
+        {
+            hasError = true;
+            errorMessage = $"добавлено {wrongIngredientsAdded} неправильных ингредиентов ";
+
+            if (ErrorManager.Instance != null)
+                ErrorManager.Instance.AddError($"замес: {errorMessage}");
+        }
+
+        if (ingredientsAdded < requiredIngredients)
+        {
+            hasError = true;
+            errorMessage += $"добавлено только {ingredientsAdded} из {requiredIngredients} правильных ингредиентов ";
+
+            if (ErrorManager.Instance != null)
+                ErrorManager.Instance.AddError($"замес: {errorMessage}");
+        }
+
+        if (hasError)
+        {
+            uiManager.ShowError($"ошибка замеса {errorMessage}", stageName);
+        }
+        else
+        {
+            Debug.Log("замес пройден успешно");
+
+            if (Inventory.Instance != null)
+                Inventory.Instance.SaveItems();
+
+            uiManager.ShowSuccess("замес пройден", nextScene, stageName);
+        }
     }
 
     public void NextScene()
     {
-        Debug.Log($"NextScene() вызван. ingredientsAdded={ingredientsAdded}, required={requiredIngredients}");
-        
-        if (ingredientsAdded >= requiredIngredients)
+        Debug.Log($"переход на следующую сцену ingredientsAdded={ingredientsAdded} required={requiredIngredients}");
+
+        if (ingredientsAdded >= requiredIngredients && wrongIngredientsAdded == 0)
         {
             if (Inventory.Instance != null)
                 Inventory.Instance.SaveItems();
-            
+
             SceneManager.LoadScene(nextScene);
         }
         else
         {
-            Debug.Log($"❌ Не хватает ингредиентов: {ingredientsAdded} из {requiredIngredients}");
-    
+            Debug.Log($"не хватает ингредиентов или есть ошибки {ingredientsAdded} из {requiredIngredients}");
         }
     }
 }
