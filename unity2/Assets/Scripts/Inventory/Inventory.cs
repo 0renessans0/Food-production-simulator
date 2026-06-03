@@ -1,21 +1,44 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement; 
 
 public class Inventory : MonoBehaviour
 {
     public ItemData data;
     public List<ItemInventory> items = new List<ItemInventory>();
+    public List<ItemInventory> savedItems = new List<ItemInventory>();
     public GameObject slotPrefab;
     public Transform inventoryPanel;
     public int maxCount = 9;
-
     public static Inventory Instance;
 
+    private bool isInitialized = false;
     private List<Image> slotIcons = new List<Image>();
-    private List<Text> slotNameTexts = new List<Text>();  // ← теперь для названий
-    private List<ItemInventory> savedItems = new List<ItemInventory>();
+    private List<Text> slotNameTexts = new List<Text>();
     private int selectedSlot = -1;
+
+    void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        Debug.Log($"Сцена {scene.name} загружена, обновляем UI");
+        
+        GameObject panel = GameObject.Find("InventoryPanel");
+        if (panel != null)
+        {
+            inventoryPanel = panel.transform;
+            RefreshUI();
+        }
+    }
 
     void Awake()
     {
@@ -23,6 +46,7 @@ public class Inventory : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            Debug.Log("Inventory.Instance создан");
         }
         else
         {
@@ -32,7 +56,18 @@ public class Inventory : MonoBehaviour
 
     void Start()
     {
-        if (inventoryPanel != null && slotPrefab != null)
+
+        if (isInitialized) return;
+        isInitialized = true;
+        if (items.Count == 0)
+        {
+            for (int i = 0; i < maxCount; i++)
+            {
+                items.Add(new ItemInventory());
+            }
+        }
+        
+        if (inventoryPanel != null && slotPrefab != null && items.Count > 0 && items[0].slotGameObject == null)
         {
             AddGraphics();
         }
@@ -50,23 +85,30 @@ public class Inventory : MonoBehaviour
             return;
         }
         
-        foreach (Transform child in inventoryPanel)
-        {
-            Destroy(child.gameObject);
-        }
-        
-        items.Clear();
-        slotIcons.Clear();
-        slotNameTexts.Clear();
-        
-        AddGraphics();
-        
-        for (int i = 0; i < savedItems.Count && i < maxCount; i++)
+        // Восстанавливаем данные из savedItems в существующие items
+        for (int i = 0; i < savedItems.Count && i < items.Count; i++)
         {
             if (savedItems[i].itemData != null)
             {
                 items[i].itemData = savedItems[i].itemData;
                 items[i].count = savedItems[i].count;
+                Debug.Log($"Восстановлен слот {i}: {savedItems[i].itemData.itemName}");
+            }
+        }
+        
+        // Пересоздаём UI слоты
+        if (items[0].slotGameObject == null)
+        {
+            AddGraphics();
+        }
+        else
+        {
+            // Обновляем UI
+            for (int i = 0; i < items.Count && i < inventoryPanel.childCount; i++)
+            {
+                Transform child = inventoryPanel.GetChild(i);
+                if (child != null)
+                    items[i].slotGameObject = child.gameObject;
                 UpdateSlotUI(i);
             }
         }
@@ -74,16 +116,21 @@ public class Inventory : MonoBehaviour
 
     public void SaveItems()
     {
-        Debug.Log($"Сохраняем {items.Count} предметов");
         savedItems.Clear();
-        foreach (var item in items)
+        for (int i = 0; i < items.Count; i++)
         {
             var copy = new ItemInventory();
-            copy.itemData = item.itemData;
-            copy.count = item.count;
+            copy.itemData = items[i].itemData;
+            copy.count = items[i].count;
             savedItems.Add(copy);
-            Debug.Log($"Сохранён: {copy.itemData?.itemName}");
+            Debug.Log($"Сохранён слот {i}: {(copy.itemData != null ? copy.itemData.itemName : "пусто")} x{copy.count}");
         }
+        Debug.Log($"Всего сохранено: {savedItems.Count}");
+    }
+
+    public List<ItemInventory> GetSavedItems()
+    {
+        return savedItems;
     }
 
     public void AddItem(int slotIndex, ItemData item, int count)
@@ -99,62 +146,88 @@ public class Inventory : MonoBehaviour
         if (slotIndex >= items.Count) return;
         items[slotIndex].itemData = null;
         items[slotIndex].count = 0;
-        UpdateSlotUI(slotIndex);
+        if (items[slotIndex].slotGameObject != null)
+        {
+            UpdateSlotUI(slotIndex);
+        }
     }
 
     void AddGraphics()
+{
+    // Проверяем, нужно ли создавать слоты
+    if (items.Count > 0 && items[0].slotGameObject != null)
     {
-        if (inventoryPanel == null)
-        {
-            Debug.LogError("inventoryPanel не назначен!");
-            return;
-        }
-        
-        if (slotPrefab == null)
-        {
-            Debug.LogError("slotPrefab не назначен!");
-            return;
-        }
-
-        foreach (Transform child in inventoryPanel)
-        {
-            Destroy(child.gameObject);
-        }
-        
-        items.Clear();
-        slotIcons.Clear();
-        slotNameTexts.Clear();
-
-        for (int i = 0; i < maxCount; i++)
-        {
-            GameObject newSlot = Instantiate(slotPrefab, inventoryPanel);
-            newSlot.name = i.ToString();
-
-            ItemInventory ii = new ItemInventory();
-            ii.slotGameObject = newSlot;
-            ii.itemData = null;
-            ii.count = 0;
-            ii.id = i;
-
-            Image icon = newSlot.transform.Find("Icon")?.GetComponent<Image>();
-            Text nameText = newSlot.transform.Find("NameText")?.GetComponent<Text>();
-            
-            slotIcons.Add(icon);
-            slotNameTexts.Add(nameText);
-            items.Add(ii);
-            
-            if (newSlot.GetComponent<InventorySlotUI>() == null)
-            {
-                var slotUI = newSlot.AddComponent<InventorySlotUI>();
-                slotUI.SetSlotIndex(i);
-            }
-            
-            UpdateSlotUI(i);
-        }
+        Debug.Log("Слоты уже созданы, пропускаем AddGraphics()");
+        return;
     }
+    
+    Debug.Log("AddGraphics() начал работу, создаю слоты...");
+
+    if (inventoryPanel == null)
+    {
+        Debug.LogError("inventoryPanel не назначен!");
+        return;
+    }
+    
+    if (slotPrefab == null)
+    {
+        Debug.LogError("slotPrefab не назначен!");
+        return;
+    }
+
+    // Полная очистка старых слотов
+    foreach (Transform child in inventoryPanel)
+    {
+        if (child != null)
+            DestroyImmediate(child.gameObject);
+    }
+    
+    // Очищаем все списки
+    items.Clear();
+    slotIcons.Clear();
+    slotNameTexts.Clear();
+
+    // Создаём новые слоты
+    for (int i = 0; i < maxCount; i++)
+    {
+        GameObject newSlot = Instantiate(slotPrefab, inventoryPanel);
+        newSlot.name = i.ToString(); 
+        Debug.Log($"Создан слот с именем {newSlot.name}");
+
+        ItemInventory ii = new ItemInventory();
+        ii.slotGameObject = newSlot;
+        ii.itemData = null;
+        ii.count = 0;
+        ii.id = i;
+        items.Add(ii);
+
+        Image icon = newSlot.transform.Find("Icon")?.GetComponent<Image>();
+        Text nameText = newSlot.transform.Find("NameText")?.GetComponent<Text>();
+        
+        slotIcons.Add(icon);
+        slotNameTexts.Add(nameText);
+        
+        InventorySlotUI slotUI = newSlot.GetComponent<InventorySlotUI>();
+        if (slotUI == null)
+        {
+            slotUI = newSlot.AddComponent<InventorySlotUI>();
+        }
+        slotUI.SetSlotIndex(i);
+        
+        UpdateSlotUI(i);
+    }
+    
+    Debug.Log($"AddGraphics() завершён, создано {items.Count} слотов");
+}
 
     public void SelectSlot(int slotIndex)
     {
+        if (slotIndex < 0 || slotIndex >= items.Count)
+        {
+            Debug.LogError($"SelectSlot: индекс {slotIndex} вне диапазона (0-{items.Count - 1})");
+            return;
+        }
+        
         selectedSlot = slotIndex;
         Debug.Log($"Выбран слот {slotIndex}, предмет: {items[slotIndex].itemData?.itemName}");
     }
@@ -210,6 +283,51 @@ public class Inventory : MonoBehaviour
             }
         }
     }
+    
+    public void RefreshUI()
+    {
+        if (inventoryPanel == null)
+        {
+            Debug.LogError("inventoryPanel = null, невозможно пересоздать слоты");
+            return;
+        }
+        
+        foreach (Transform child in inventoryPanel)
+        {
+            Destroy(child.gameObject);
+        }
+        
+        slotIcons.Clear();
+        slotNameTexts.Clear();
+        
+        AddGraphics();
+    }
+    
+    public void ResetInventoryUI()
+    {
+        Debug.Log("ResetInventoryUI: очистка и пересоздание слотов");
+        
+        slotIcons.Clear();
+        slotNameTexts.Clear();
+        
+        if (inventoryPanel != null)
+        {
+            foreach (Transform child in inventoryPanel)
+            {
+                DestroyImmediate(child.gameObject);
+            }
+        }
+        
+        AddGraphics();
+        
+        MagicBox magicBox = FindAnyObjectByType<MagicBox>();
+        if (magicBox != null)
+        {
+            magicBox.ResetBox();
+        }
+        
+        Debug.Log($"ResetInventoryUI завершён, создано {items.Count} слотов");
+    }
 }
 
 [System.Serializable]
@@ -218,5 +336,5 @@ public class ItemInventory
     public int id;
     public GameObject slotGameObject;
     public ItemData itemData;
-    public int count;   // оставлен, но не используется в UI
+    public int count;
 }

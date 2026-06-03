@@ -1,18 +1,18 @@
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro; 
+using TMPro;
+using UnityEngine.SceneManagement;
 
 public class FermentationManager : MonoBehaviour
 {
-    public UIManager uiManager;
     public Slider temperatureSlider;
     public Slider timeSlider;
     public TextMeshProUGUI tempValueText;
     public TextMeshProUGUI timeValueText;
-    public string nextScene = "PackagingScene";
+    public string nextScene = "PackagingScen";
     public string stageName = "Брожение";
 
-    // Правила из БД (потом замените на реальные данные)
+    // Правила из БД
     private float tempMin = 12f;
     private float tempMax = 16f;
     private int timeMin = 5;
@@ -20,45 +20,104 @@ public class FermentationManager : MonoBehaviour
 
     void Start()
     {
+        Debug.Log("=== СЦЕНА БРОЖЕНИЯ ===");
+        
+        // Восстанавливаем инвентарь
+        Transform panel = GameObject.Find("InventoryPanel")?.transform;
+        if (panel != null && Inventory.Instance != null)
+        {
+            Inventory.Instance.SetInventoryPanel(panel);
+            
+            var saved = Inventory.Instance.savedItems;
+            if (saved != null && saved.Count > 0)
+            {
+                Debug.Log($"Восстанавливаем {saved.Count} предметов");
+                for (int i = 0; i < saved.Count && i < Inventory.Instance.items.Count; i++)
+                {
+                    if (saved[i].itemData != null)
+                    {
+                        Inventory.Instance.items[i].itemData = saved[i].itemData;
+                        Inventory.Instance.items[i].count = saved[i].count;
+                        Inventory.Instance.UpdateSlotUI(i);
+                        Debug.Log($"✅ Восстановлен {saved[i].itemData.itemName} в слот {i}");
+                    }
+                }
+            }
+        }
+        
         // Обновляем отображение значений
         UpdateTempDisplay();
         UpdateTimeDisplay();
 
         // Слушаем изменения слайдеров
-        temperatureSlider.onValueChanged.AddListener((v) => UpdateTempDisplay());
-        timeSlider.onValueChanged.AddListener((v) => UpdateTimeDisplay());
+        if (temperatureSlider != null)
+            temperatureSlider.onValueChanged.AddListener((v) => UpdateTempDisplay());
+        if (timeSlider != null)
+            timeSlider.onValueChanged.AddListener((v) => UpdateTimeDisplay());
+        
+        // Привязываем кнопку перехода
+        Button nextButton = GameObject.Find("Button_ToPackaging")?.GetComponent<Button>();
+        if (nextButton != null)
+        {
+            nextButton.onClick.RemoveAllListeners();
+            nextButton.onClick.AddListener(() => CheckAndNext());
+            Debug.Log("✅ Кнопка 'Button_ToPackaging' привязана к CheckAndNext()");
+        }
+        else
+        {
+            Debug.LogError("❌ Кнопка 'Button_ToPackaging' не найдена! Проверьте имя кнопки.");
+        }
     }
 
     void UpdateTempDisplay()
     {
-        if (tempValueText != null)
+        if (tempValueText != null && temperatureSlider != null)
             tempValueText.text = temperatureSlider.value.ToString("F1") + "°C";
     }
 
     void UpdateTimeDisplay()
     {
-        if (timeValueText != null)
-            timeValueText.text = timeSlider.value.ToString("F0") + " дней";
+        if (timeValueText != null && timeSlider != null)
+            timeValueText.text = timeSlider.value.ToString("F0") + " дн.";
     }
 
-    public void CheckStage()
+    public void CheckAndNext()
     {
+        Debug.Log($"🔍 CheckAndNext() ВЫЗВАН! Переход на сцену: {nextScene}");
+        
+        if (temperatureSlider == null || timeSlider == null)
+        {
+            Debug.LogError("❌ Слайдеры не назначены в инспекторе!");
+            SceneManager.LoadScene(nextScene);
+            return;
+        }
+        
         float temp = temperatureSlider.value;
         int time = (int)timeSlider.value;
 
         bool tempOk = (temp >= tempMin && temp <= tempMax);
         bool timeOk = (time >= timeMin && time <= timeMax);
 
-        if (tempOk && timeOk)
+        if (!tempOk || !timeOk)
         {
-            uiManager.ShowSuccess("✅ Брожение пройдено!", nextScene, stageName);
+            string error = "";
+            if (!tempOk) error += $"Температура {temp}°C (норма {tempMin}-{tempMax}). ";
+            if (!timeOk) error += $"Время {time} дн. (норма {timeMin}-{timeMax}). ";
+            
+            if (ErrorManager.Instance != null)
+                ErrorManager.Instance.AddError($"Брожение: {error}");
+            
+            Debug.Log($"❌ Ошибка брожения: {error}");
         }
         else
         {
-            string error = "";
-            if (!tempOk) error += $"Температура {temp}°C (нужно {tempMin}-{tempMax}). ";
-            if (!timeOk) error += $"Время {time} дней (нужно {timeMin}-{timeMax}). ";
-            uiManager.ShowError($"❌ Ошибка: {error}", stageName);
+            Debug.Log("✅ Параметры брожения в норме");
         }
+        
+        // Сохраняем инвентарь и переходим
+        if (Inventory.Instance != null)
+            Inventory.Instance.SaveItems();
+        
+        SceneManager.LoadScene(4);
     }
 }

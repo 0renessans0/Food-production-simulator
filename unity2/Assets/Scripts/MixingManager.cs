@@ -1,18 +1,66 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class MixingManager : MonoBehaviour
 {
-    public UIManager uiManager;
     public Inventory inventory;
     public Slider progressBar;
-    public string nextScene = "FermentationScene";
+    public string nextScene = "FermentationScen";
     public string stageName = "Замес";
 
     private int ingredientsAdded = 0;
     private int requiredIngredients = 4;
 
-    public void AddIngredient(int slotIndex)
+    void Start()
+    {
+        Debug.Log("=== СЦЕНА ЗАМЕСА ===");
+        
+        if (inventory == null)
+        {
+            inventory = Inventory.Instance;
+            if (inventory == null)
+                inventory = FindAnyObjectByType<Inventory>();
+        }
+        
+        // Восстанавливаем инвентарь
+        Transform panel = GameObject.Find("InventoryPanel")?.transform;
+        if (panel != null && Inventory.Instance != null)
+        {
+            Inventory.Instance.SetInventoryPanel(panel);
+            
+            var saved = Inventory.Instance.savedItems;
+            if (saved != null && saved.Count > 0)
+            {
+                for (int i = 0; i < saved.Count && i < Inventory.Instance.items.Count; i++)
+                {
+                    if (saved[i].itemData != null)
+                    {
+                        Inventory.Instance.items[i].itemData = saved[i].itemData;
+                        Inventory.Instance.items[i].count = saved[i].count;
+                        Inventory.Instance.UpdateSlotUI(i);
+                    }
+                }
+            }
+        }
+        
+        if (progressBar != null)
+        {
+            progressBar.maxValue = requiredIngredients;
+            progressBar.value = ingredientsAdded;
+        }
+
+        // Привязываем кнопку
+        Button nextButton = GameObject.Find("Button_ToFermentation")?.GetComponent<Button>();
+        if (nextButton != null)
+        {
+            nextButton.onClick.RemoveAllListeners();
+            nextButton.onClick.AddListener(() => NextScene());
+            Debug.Log("✅ Кнопка привязана к NextScene()");
+        }
+    }
+
+    public void AddIngredientFromSlot(int slotIndex)
     {
         if (ingredientsAdded >= requiredIngredients)
         {
@@ -20,6 +68,14 @@ public class MixingManager : MonoBehaviour
             return;
         }
 
+        if (inventory == null)
+        {
+            inventory = FindAnyObjectByType<Inventory>();
+            if (inventory == null) return;
+        }
+
+        if (slotIndex >= inventory.items.Count) return;
+        
         var item = inventory.items[slotIndex].itemData;
         if (item == null || inventory.items[slotIndex].count == 0)
         {
@@ -27,73 +83,36 @@ public class MixingManager : MonoBehaviour
             return;
         }
 
-        // Увеличиваем счётчик
-        ingredientsAdded++;
-        
-        // Обновляем шкалу
-        progressBar.value = ingredientsAdded;
-        
-        // Очищаем слот
-        inventory.items[slotIndex].itemData = null;
-        inventory.items[slotIndex].count = 0;
-        inventory.UpdateSlotUI(slotIndex);
-        
-        Debug.Log($"🍺 Добавлен ингредиент {ingredientsAdded}/{requiredIngredients} из слота {slotIndex}");
-        
-        if (ingredientsAdded >= requiredIngredients)
+        if (slotIndex >= 4)
         {
-            Debug.Log("🎉 Все ингредиенты добавлены! Можно переходить на следующий этап.");
+            Debug.Log($"❌ Слот {slotIndex} не является ингредиентом для замеса!");
+            return;
         }
+
+        ingredientsAdded++;
+        if (progressBar != null)
+            progressBar.value = ingredientsAdded;
+        
+        inventory.ClearSlot(slotIndex);
+        
+        Debug.Log($"🍺 Добавлен {item.itemName} в чан! {ingredientsAdded}/{requiredIngredients}");
     }
 
-    void Start()
-{
-    // Находим панель инвентаря
-    Transform panel = GameObject.Find("InventoryPanel")?.transform;
-    if (panel != null)
+    public void NextScene()
     {
-        Inventory.Instance.SetInventoryPanel(panel);
-    }
-    else
-    {
-        Debug.LogError("InventoryPanel не найден на сцене!");
-    }
-}
-
-    public void AddIngredientFromSlot(int slotIndex)
-{
-    if (ingredientsAdded >= requiredIngredients)
-    {
-        Debug.Log("⚠️ Все ингредиенты уже добавлены!");
-        return;
-    }
-
-    var item = inventory.items[slotIndex].itemData;
-    if (item == null || inventory.items[slotIndex].count == 0)
-    {
-        Debug.Log($"❌ В слоте {slotIndex} нет ингредиента!");
-        return;
-    }
-
-    ingredientsAdded++;
-    progressBar.value = ingredientsAdded;
-    
-    inventory.items[slotIndex].itemData = null;
-    inventory.items[slotIndex].count = 0;
-    inventory.UpdateSlotUI(slotIndex);
-    
-    Debug.Log($"🍺 Добавлен {item.itemName} в чан! {ingredientsAdded}/{requiredIngredients}");
-}
-
-    public void CheckStage()
-    {
+        Debug.Log($"NextScene() вызван. ingredientsAdded={ingredientsAdded}, required={requiredIngredients}");
+        
         if (ingredientsAdded >= requiredIngredients)
         {
-            uiManager.ShowSuccess("✅ Замес пройден!", nextScene, stageName);
+            if (Inventory.Instance != null)
+                Inventory.Instance.SaveItems();
+            
+            SceneManager.LoadScene(nextScene);
         }
         else
         {
-            uiManager.ShowError($"❌ Добавлено {ingredientsAdded} из {requiredIngredients} ингредиентов", stageName);
+            Debug.Log($"❌ Не хватает ингредиентов: {ingredientsAdded} из {requiredIngredients}");
+    
         }
     }
 }

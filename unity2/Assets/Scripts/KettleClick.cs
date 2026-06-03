@@ -3,32 +3,45 @@ using UnityEngine;
 public class KettleClick : MonoBehaviour
 {
     public MixingManager mixingManager;
-    public Inventory inventory;
 
-    private void OnMouseDown()
+    public void OnKettleClick()
     {
-        int selectedSlot = inventory.GetSelectedSlot();
+        Debug.Log("🔨 Котёл (UI) нажат!");
         
-        if (selectedSlot == -1)
-        {
-            Debug.Log("сначала выберите ингредиент в инвентаре!");
-            return;
-        }
+        // Находим Inventory на сцене
+        Inventory inventory = FindAnyObjectByType<Inventory>();
+    if (inventory == null)
+    {
+        Debug.LogError("❌ Inventory не найден на сцене!");
+        return;
+    }
+    
+    int selectedSlot = inventory.GetSelectedSlot();
+    Debug.Log($"Выбранный слот: {selectedSlot}");
+    
+    if (selectedSlot != -1)
+    {
+        inventory.SelectSlot(-1);  
+    }
 
         if (selectedSlot >= 4) 
         {
-            Debug.Log("это не ингредиент для замеса!");
+            Debug.Log("❌ Это не ингредиент для замеса (нужны слоты 0-3)!");
             return;
         }
 
         if (inventory.items[selectedSlot].itemData == null || inventory.items[selectedSlot].count == 0)
         {
-            Debug.Log("выбранном слоте нет ингредиента!");
+            Debug.Log("❌ В выбранном слоте нет ингредиента!");
             return;
         }
 
-        mixingManager.AddIngredientFromSlot(selectedSlot);
+        if (mixingManager == null)
+        {
+            mixingManager = FindAnyObjectByType<MixingManager>();
+        }
         
+        mixingManager.AddIngredientFromSlot(selectedSlot);
         inventory.SelectSlot(-1);
     }
 }

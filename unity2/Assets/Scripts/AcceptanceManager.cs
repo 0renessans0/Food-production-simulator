@@ -5,41 +5,98 @@ public class AcceptanceManager : MonoBehaviour
 {
     public UIManager uiManager;
     public Inventory inventory;
-    public string nextScene = "MixingScene";
+    public string nextScene = "MixingScen";
     public string stageName = "Приёмка";
+void Start()
+{
+    if (uiManager == null)
+        uiManager = FindAnyObjectByType<UIManager>();
+    
+    if (inventory == null)
+    {
+        inventory = Inventory.Instance;
+        if (inventory == null)
+            inventory = FindAnyObjectByType<Inventory>();
+    }
+    
+    Debug.Log($"AcceptanceManager: uiManager = {(uiManager != null ? "найден" : "НЕ НАЙДЕН")}");
+    Debug.Log($"AcceptanceManager: inventory = {(inventory != null ? "найден" : "НЕ НАЙДЕН")}");
+}
 
     public void CheckStage()
+{
+    Debug.Log(" CheckStage ВЫЗВАН!");
+
+    if (uiManager == null)
     {
-        Debug.Log("🔍 CheckStage ВЫЗВАН!");
+        uiManager = FindAnyObjectByType<UIManager>();
+        Debug.Log(uiManager != null ? "UIManager найден автоматически" : " UIManager НЕ НАЙДЕН");
+    }
+
+    if (inventory == null)
+    {
+        inventory = Inventory.Instance;
+        if (inventory == null)
+            inventory = FindAnyObjectByType<Inventory>();
+        Debug.Log(inventory != null ? "Inventory найден" : "Inventory НЕ НАЙДЕН");
+    }
+
+    if (uiManager == null)
+    {
+        Debug.LogError("uiManager = null невозможно показать окно.");
+        return;
+    }
+
+    if (inventory == null)
+    {
+        Debug.LogError("inventory = null!");
+        return;
+    }
+
+    bool allGood = true;
+    string errorMsg = "";
+
+    for (int i = 0; i < 9; i++)
+    {
+        Debug.Log($"Проверка слота {i}: itemData = {(inventory.items[i].itemData != null ? inventory.items[i].itemData.itemName : "null")}, count = {inventory.items[i].count}");
         
-        bool allGood = true;
-        string errorMsg = "";
-
-        for (int i = 0; i < 9; i++)
+        if (inventory.items[i].itemData == null || inventory.items[i].count == 0)
         {
-            if (i >= inventory.items.Count) break;
-            
-            var item = inventory.items[i];
-            if (item == null || item.itemData == null || item.count == 0)
-            {
-                allGood = false;
-                errorMsg += $"Не хватает ингредиента в слоте {i}. ";
-            }
-        }
-
-        if (allGood)
-        {
-            uiManager.ShowSuccess("Приёмка пройдена!", nextScene, stageName);
-        }
-        else
-        {
-            uiManager.ShowError($"Ошибка: {errorMsg}", stageName);
+            allGood = false;
+            errorMsg += $"Не хватает ингредиента в слоте {i}. ";
         }
     }
 
-    public void NextScene()
+    Debug.Log($"allGood = {allGood}, errorMsg = {errorMsg}");
+    if (allGood)
+    {
+        uiManager.ShowSuccess("Приёмка пройдена!", nextScene, stageName);
+    }
+    else
+    {
+        uiManager.ShowError("Не все ингредиенты приняты. Проверьте слоты.", stageName);
+    }
+}
+public void NextScene()
 {
+    Debug.Log("=== NextScene() ВЫЗВАН НА ПРИЁМКЕ ===");
+    
+    if (Inventory.Instance == null)
+    {
+        Debug.LogError("Inventory.Instance = null!");
+        return;
+    }
+    
+    for (int i = 0; i < Inventory.Instance.items.Count; i++)
+    {
+        var item = Inventory.Instance.items[i];
+        Debug.Log($"Слот {i}: {(item.itemData != null ? item.itemData.itemName : "пусто")} x{item.count}");
+    }
+    
     Inventory.Instance.SaveItems();
-    SceneManager.LoadScene("MixingScene");
+    
+    Debug.Log($"После SaveItems: savedItems.Count = {Inventory.Instance.savedItems.Count}");
+    
+    SceneManager.LoadScene("MixingScen");
 }
 }

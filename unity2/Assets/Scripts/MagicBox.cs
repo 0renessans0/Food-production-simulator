@@ -4,48 +4,82 @@ public class MagicBox : MonoBehaviour
 {
     public ItemData[] items;           
     public int amountPerClick = 1;
+    public Inventory inventoryReference;  
 
     private Inventory inventory;
     private int currentSlot = 0;
 
-    private void Start()
+    void Start()
     {
-        inventory = FindAnyObjectByType<Inventory>();
-        
-        if (inventory == null)
+        if (inventoryReference != null)
         {
-            Debug.LogError("❌ MagicBox: Inventory не найден!");
+            inventory = inventoryReference;
         }
         else
         {
-            Debug.Log("✅ MagicBox: Inventory найден");
+            inventory = FindAnyObjectByType<Inventory>();
         }
+        
+        Debug.Log(inventory != null ? "✅ MagicBox: Inventory найден" : "❌ MagicBox: Inventory НЕ НАЙДЕН");
     }
 
     public void OnBoxClick()
     {
-        Debug.Log($"📦 MagicBox: нажата! currentSlot={currentSlot}");
-
-        if (inventory == null)
+        if (Inventory.Instance  == null)
         {
-            Debug.LogError("❌ Inventory = null, добавление невозможно");
+            Debug.LogError("❌ Inventory.Instance  = null, добавление невозможно");
             return;
         }
 
         if (currentSlot >= items.Length)
         {
-            Debug.Log("⚠️ Все предметы уже добавлены!");
+            Debug.Log("Все предметы уже добавлены!");
             return;
         }
 
-        if (items[currentSlot] == null)
-        {
-            Debug.LogError($"❌ Предмет в слоте {currentSlot} не назначен!");
-            return;
-        }
-
-        inventory.AddItem(currentSlot, items[currentSlot], amountPerClick);
-        Debug.Log($"✅ Добавлен {items[currentSlot].itemName} в слот {currentSlot}");
+        Inventory.Instance.AddItem(currentSlot, items[currentSlot], amountPerClick);
+        Debug.Log($"Добавлен {items[currentSlot].itemName} в слот {currentSlot}");
         currentSlot++;
+    }
+
+    public void ResetBox()
+    {
+        currentSlot = 0;
+        Debug.Log("MagicBox сброшен");
+    }
+
+    void OnEnable()
+    {
+        if (inventory == null && inventoryReference != null)
+        {
+            inventory = inventoryReference;
+        }
+        else if (inventory == null)
+        {
+            FindInventory();
+        }
+    }
+
+    void FindInventory()
+    {
+        inventory = FindAnyObjectByType<Inventory>();
+        
+        if (inventory == null)
+        {
+            GameObject gm = GameObject.Find("GameManager");
+            if (gm != null)
+            {
+                inventory = gm.GetComponent<Inventory>();
+            }
+        }
+        
+        if (inventory == null)
+        {
+            Debug.LogError("❌ MagicBox: Inventory НЕ НАЙДЕН! Перетащите GameManager в поле inventoryReference");
+        }
+        else
+        {
+            Debug.Log("✅ MagicBox: Inventory найден на объекте: " + inventory.gameObject.name);
+        }
     }
 }
