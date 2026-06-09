@@ -202,7 +202,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 2086629122}
         m_TargetAssemblyTypeName: UIManager, Assembly-CSharp
         m_MethodName: OnSuccessNext
         m_Mode: 1
@@ -396,6 +396,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0382f56f5495cf34d9642ab1ab73bd94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FermentationManager
+  uiManager: {fileID: 2086629122}
   temperatureSlider: {fileID: 451241351}
   timeSlider: {fileID: 1943278287}
   tempValueText: {fileID: 2146916243}
@@ -1853,9 +1854,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 2086629121}
+      - m_Target: {fileID: 359792917}
         m_TargetAssemblyTypeName: FermentationManager, Assembly-CSharp
-        m_MethodName: CheckAndNext
+        m_MethodName: CheckStage
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1986,7 +1987,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 2086629122}
         m_TargetAssemblyTypeName: UIManager, Assembly-CSharp
         m_MethodName: OnErrorRestart
         m_Mode: 1
@@ -2279,6 +2280,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0382f56f5495cf34d9642ab1ab73bd94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FermentationManager
+  uiManager: {fileID: 0}
   temperatureSlider: {fileID: 451241351}
   timeSlider: {fileID: 1943278287}
   tempValueText: {fileID: 2146916243}
@@ -3124,6 +3126,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0382f56f5495cf34d9642ab1ab73bd94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FermentationManager
+  uiManager: {fileID: 2086629122}
   temperatureSlider: {fileID: 451241351}
   timeSlider: {fileID: 1943278287}
   tempValueText: {fileID: 2146916243}
@@ -3200,6 +3203,9 @@ MonoBehaviour:
   slotPrefab: {fileID: 3376735197274127569, guid: 04f600821a14f3d418cc33a347eee3c3, type: 3}
   inventoryPanel: {fileID: 417942063}
   maxCount: 9
+  mixedIngredientsCount: 0
+  mixedWrongCount: 0
+  mixedUsed: 00000000
 --- !u!4 &2086629124
 Transform:
   m_ObjectHideFlags: 0

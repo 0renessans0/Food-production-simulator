@@ -314,6 +314,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   mixingManager: {fileID: 1736955536}
+  inventory: {fileID: 1832449939}
 --- !u!4 &227906793
 Transform:
   m_ObjectHideFlags: 0
@@ -487,9 +488,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1736955536}
-        m_TargetAssemblyTypeName: MixingManager, Assembly-CSharp
-        m_MethodName: RestartStage
+      - m_Target: {fileID: 1832449944}
+        m_TargetAssemblyTypeName: UIManager, Assembly-CSharp
+        m_MethodName: OnErrorRestart
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -892,7 +893,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1736955536}
         m_TargetAssemblyTypeName: MixingManager, Assembly-CSharp
-        m_MethodName: RestartStage
+        m_MethodName: CheckStage
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2313,6 +2314,9 @@ MonoBehaviour:
   slotPrefab: {fileID: 3376735197274127569, guid: 04f600821a14f3d418cc33a347eee3c3, type: 3}
   inventoryPanel: {fileID: 1039976754}
   maxCount: 9
+  mixedIngredientsCount: 0
+  mixedWrongCount: 0
+  mixedUsed: 00000000
 --- !u!4 &1832449940
 Transform:
   m_ObjectHideFlags: 0
@@ -2584,9 +2588,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1736955536}
-        m_TargetAssemblyTypeName: MixingManager, Assembly-CSharp
-        m_MethodName: NextScene
+      - m_Target: {fileID: 1832449944}
+        m_TargetAssemblyTypeName: UIManager, Assembly-CSharp
+        m_MethodName: OnSuccessNext
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

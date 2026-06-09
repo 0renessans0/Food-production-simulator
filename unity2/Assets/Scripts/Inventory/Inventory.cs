@@ -12,6 +12,9 @@ public class Inventory : MonoBehaviour
     public Transform inventoryPanel;
     public int maxCount = 9;
     public static Inventory Instance;
+    public int mixedIngredientsCount = 0;
+    public int mixedWrongCount = 0;
+public bool[] mixedUsed = new bool[4];
 
     private bool isInitialized = false;
     private List<Image> slotIcons = new List<Image>();

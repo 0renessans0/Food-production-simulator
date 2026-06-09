@@ -7,6 +7,12 @@ public class KettleClick : MonoBehaviour
 
     void Start()
     {
+        // Пытаемся найти, но не падаем, если не нашли
+        TryFindComponents();
+    }
+
+    void TryFindComponents()
+    {
         if (mixingManager == null)
             mixingManager = FindAnyObjectByType<MixingManager>();
         
@@ -16,16 +22,22 @@ public class KettleClick : MonoBehaviour
             if (inventory == null)
                 inventory = FindAnyObjectByType<Inventory>();
         }
-        
-        Debug.Log($"kettle click: mixing manager = {(mixingManager != null ? "найден" : "не найден")}");
-        Debug.Log($"kettle click: inventory = {(inventory != null ? "найден" : "не найден")}");
     }
 
     public void OnKettleClick()
     {
+        // Ищем КАЖДЫЙ РАЗ при клике
+        TryFindComponents();
+        
         if (inventory == null)
         {
-            Debug.LogError("inventory равен null");
+            Debug.LogError("inventory равен null! Не могу добавить ингредиент.");
+            return;
+        }
+        
+        if (mixingManager == null)
+        {
+            Debug.LogError("mixingManager равен null! Не могу добавить ингредиент.");
             return;
         }
         
@@ -56,8 +68,6 @@ public class KettleClick : MonoBehaviour
         }
 
         mixingManager.AddIngredientFromSlot(selectedSlot);
-        
-        if (selectedSlot != -1)
-            inventory.SelectSlot(-1);
+        inventory.SelectSlot(-1);
     }
 }

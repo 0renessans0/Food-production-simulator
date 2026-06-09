@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 
 public class FermentationManager : MonoBehaviour
 {
+    public UIManager uiManager;
     public Slider temperatureSlider;
     public Slider timeSlider;
     public TextMeshProUGUI tempValueText;
@@ -12,7 +13,6 @@ public class FermentationManager : MonoBehaviour
     public string nextScene = "PackagingScen";
     public string stageName = "Брожение";
 
-    // Правила из БД
     private float tempMin = 12f;
     private float tempMax = 16f;
     private int timeMin = 5;
@@ -21,9 +21,12 @@ public class FermentationManager : MonoBehaviour
     void Start()
     {
         Debug.Log("=== сцена брожения ===");
+        
+        if (uiManager == null)
+            uiManager = FindAnyObjectByType<UIManager>();
+        
         UIManager.Instance.FindPanelsOnCurrentScene();
         
-        // Восстанавливаем инвентарь
         Transform panel = GameObject.Find("InventoryPanel")?.transform;
         if (panel != null && Inventory.Instance != null)
         {
@@ -58,7 +61,8 @@ public class FermentationManager : MonoBehaviour
         if (nextButton != null)
         {
             nextButton.onClick.RemoveAllListeners();
-            nextButton.onClick.AddListener(() => CheckAndNext());
+            nextButton.onClick.AddListener(() => CheckStage());
+            Debug.Log("кнопка привязана к CheckStage");
         }
         else
         {
@@ -78,42 +82,46 @@ public class FermentationManager : MonoBehaviour
             timeValueText.text = timeSlider.value.ToString("F0") + " дн.";
     }
 
-    public void CheckAndNext()
+    public void CheckStage()
+{
+    Debug.Log($"CheckStage() вызван");
+    
+    if (temperatureSlider == null || timeSlider == null)
     {
-        Debug.Log($"CheckAndNext() вызван Переход на сцену: {nextScene}");
-        
-        if (temperatureSlider == null || timeSlider == null)
-        {
-            Debug.LogError("Слайдеры не назначены в инспекторе!");
-            SceneManager.LoadScene(nextScene);
-            return;
-        }
-        
-        float temp = temperatureSlider.value;
-        int time = (int)timeSlider.value;
-
-        bool tempOk = (temp >= tempMin && temp <= tempMax);
-        bool timeOk = (time >= timeMin && time <= timeMax);
-
-        if (!tempOk || !timeOk)
-        {
-            string error = "";
-            if (!tempOk) error += $"Температура {temp}°C (норма {tempMin}-{tempMax}). ";
-            if (!timeOk) error += $"Время {time} дн. (норма {timeMin}-{timeMax}). ";
-            
-            if (ErrorManager.Instance != null)
-                ErrorManager.Instance.AddError($"Брожение: {error}");
-            
-            Debug.Log($"Ошибка брожения: {error}");
-        }
-        else
-        {
-            Debug.Log("Параметры брожения в норме");
-        }
-        
-        if (Inventory.Instance != null)
-            Inventory.Instance.SaveItems();
-        
-        SceneManager.LoadScene(4);
+        Debug.LogError("Слайдеры не назначены в инспекторе!");
+        SceneManager.LoadScene(nextScene);
+        return;
     }
+    
+    float temp = temperatureSlider.value;
+    int time = (int)timeSlider.value;
+
+    bool tempOk = (temp >= tempMin && temp <= tempMax);
+    bool timeOk = (time >= timeMin && time <= timeMax);
+
+    if (!tempOk || !timeOk)
+    {
+        string error = "";
+        if (!tempOk) error += $"Температура {temp}°C (норма {tempMin}-{tempMax}). ";
+        if (!timeOk) error += $"Время {time} дн. (норма {timeMin}-{timeMax}). ";
+        
+        if (ErrorManager.Instance != null)
+            ErrorManager.Instance.AddError($"Брожение: {error}");
+        
+        Debug.Log($"Ошибка брожения: {error}");
+        
+        if (uiManager != null)
+            uiManager.ShowError($"Ошибка брожения: {error}", stageName);
+    }
+    else
+    {
+        Debug.Log("Параметры брожения в норме");
+        
+        if (uiManager != null)
+            uiManager.ShowSuccess("Брожение пройдено!", nextScene, stageName);
+    }
+    
+    if (Inventory.Instance != null)
+        Inventory.Instance.SaveItems();
+}
 }
