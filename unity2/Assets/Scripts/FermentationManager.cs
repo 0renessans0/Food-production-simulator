@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
+using System.Collections;
 
 public class FermentationManager : MonoBehaviour
 {
@@ -10,7 +11,7 @@ public class FermentationManager : MonoBehaviour
     public Slider timeSlider;
     public TextMeshProUGUI tempValueText;
     public TextMeshProUGUI timeValueText;
-    public string nextScene = "PackagingScen";
+    public string nextScene = "PackagingScene";
     public string stageName = "Брожение";
 
     private float tempMin = 12f;
@@ -20,6 +21,12 @@ public class FermentationManager : MonoBehaviour
 
     void Start()
     {
+        tempMin = PlayerPrefs.GetFloat("TempMin", 12f);
+        tempMax = PlayerPrefs.GetFloat("TempMax", 16f);
+        timeMin = PlayerPrefs.GetInt("TimeMin", 5);
+        timeMax = PlayerPrefs.GetInt("TimeMax", 7);
+        Debug.Log($"Параметры брожения из БД: {tempMin}-{tempMax}°C, {timeMin}-{timeMax} дней");
+        
         Debug.Log("=== сцена брожения ===");
         
         if (uiManager == null)
@@ -83,45 +90,54 @@ public class FermentationManager : MonoBehaviour
     }
 
     public void CheckStage()
-{
-    Debug.Log($"CheckStage() вызван");
-    
-    if (temperatureSlider == null || timeSlider == null)
     {
-        Debug.LogError("Слайдеры не назначены в инспекторе!");
-        SceneManager.LoadScene(nextScene);
-        return;
+        Debug.Log("CheckStage вызван");
+        
+        if (temperatureSlider == null || timeSlider == null)
+        {
+            Debug.LogError("Слайдеры не назначены!");
+            return;
+        }
+        
+        float temp = temperatureSlider.value;
+        int time = (int)timeSlider.value;
+        
+        bool tempOk = (temp >= tempMin && temp <= tempMax);
+        bool timeOk = (time >= timeMin && time <= timeMax);
+        
+        if (!tempOk || !timeOk)
+        {
+            string error = "";
+            if (!tempOk) error += $"Температура {temp}°C (норма {tempMin}-{tempMax}). ";
+            if (!timeOk) error += $"Время {time} дн. (норма {timeMin}-{timeMax}). ";
+            
+            if (ErrorManager.Instance != null)
+                ErrorManager.Instance.AddError($"Брожение: {error}");
+            
+            Debug.Log($"Ошибка брожения: {error}");
+            
+            if (uiManager != null)
+                uiManager.ShowError($"Ошибка брожения: {error}", stageName);
+        }
+        else
+        {
+            Debug.Log("Параметры брожения в норме");
+            
+            // ========= ИСПРАВЛЕНО: вызов с задержкой =========
+            StartCoroutine(ShowSuccessWithDelay());
+            // ================================================
+        }
+        
+        if (Inventory.Instance != null)
+            Inventory.Instance.SaveItems();
     }
     
-    float temp = temperatureSlider.value;
-    int time = (int)timeSlider.value;
-
-    bool tempOk = (temp >= tempMin && temp <= tempMax);
-    bool timeOk = (time >= timeMin && time <= timeMax);
-
-    if (!tempOk || !timeOk)
+    IEnumerator ShowSuccessWithDelay()
     {
-        string error = "";
-        if (!tempOk) error += $"Температура {temp}°C (норма {tempMin}-{tempMax}). ";
-        if (!timeOk) error += $"Время {time} дн. (норма {timeMin}-{timeMax}). ";
-        
-        if (ErrorManager.Instance != null)
-            ErrorManager.Instance.AddError($"Брожение: {error}");
-        
-        Debug.Log($"Ошибка брожения: {error}");
-        
-        if (uiManager != null)
-            uiManager.ShowError($"Ошибка брожения: {error}", stageName);
-    }
-    else
-    {
-        Debug.Log("Параметры брожения в норме");
+        // Ждём 0.1 секунды, чтобы UIManager успел найти панели
+        yield return new WaitForSeconds(0.1f);
         
         if (uiManager != null)
             uiManager.ShowSuccess("Брожение пройдено!", nextScene, stageName);
     }
-    
-    if (Inventory.Instance != null)
-        Inventory.Instance.SaveItems();
-}
 }

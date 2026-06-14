@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
 using System.Collections.Generic;
+using System.Collections;
 
 public class ResultManager : MonoBehaviour
 {
@@ -15,6 +16,13 @@ public class ResultManager : MonoBehaviour
 
     void Start()
     {
+        // Загружаем веса этапов из БД
+        weightStage1 = PlayerPrefs.GetFloat("WeightStage1", 0.15f);
+        weightStage2 = PlayerPrefs.GetFloat("WeightStage2", 0.35f);
+        weightStage3 = PlayerPrefs.GetFloat("WeightStage3", 0.35f);
+        weightStage4 = PlayerPrefs.GetFloat("WeightStage4", 0.15f);
+        Debug.Log($"Веса этапов из БД: {weightStage1}, {weightStage2}, {weightStage3}, {weightStage4}");
+        
         CalculateAndDisplayResults();
     }
 
@@ -66,6 +74,26 @@ public class ResultManager : MonoBehaviour
             string errorText = errorMessages.Count > 0 ? string.Join("\n", errorMessages) : "Все этапы пройдены без ошибок";
             errorListText.text = errorText;
         }
+        
+        // Сохраняем результаты на сервер
+        SaveResultToServer(grade, totalScore, errorMessages);
+    }
+    
+    void SaveResultToServer(string grade, float totalScore, List<string> errorMessages)
+    {
+        string sessionId = System.Guid.NewGuid().ToString();
+        string gradeText = $"{grade} | {totalScore:F1} / 100";
+        string errorReport = string.Join("\n", errorMessages);
+        
+        StartCoroutine(ApiClient.Instance.SaveResult(
+            sessionId, gradeText, errorReport, 1, 1,
+            (success) => {
+                if (success)
+                    Debug.Log("Результаты сохранены на сервере");
+                else
+                    Debug.LogError("Ошибка сохранения результатов");
+            }
+        ));
     }
 
     public void RestartGame()
@@ -73,7 +101,7 @@ public class ResultManager : MonoBehaviour
         if (ErrorManager.Instance != null)
             ErrorManager.Instance.errors.Clear();
         
-        SceneManager.LoadScene("StartScen");
+        SceneManager.LoadScene("StartScan"); // ← название твоей стартовой сцены
     }
 
     public void ExitToWebsite()

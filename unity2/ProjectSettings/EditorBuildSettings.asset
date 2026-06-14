@@ -18,7 +18,7 @@ EditorBuildSettings:
     path: Assets/Scenes/FermentationScen.unity
     guid: 0353ba56fa30d8543a6388693a91ce2c
   - enabled: 1
-    path: Assets/Scenes/PackagingScen.unity
+    path: Assets/Scenes/PackagingScene.unity
     guid: bf24414334bc35f4ea38c4cb0fed4132
   - enabled: 1
     path: Assets/Scenes/ResultScen.unity

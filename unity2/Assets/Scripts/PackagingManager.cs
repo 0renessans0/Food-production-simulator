@@ -27,9 +27,39 @@ public class PackagingManager : MonoBehaviour
     private bool isPacked = false;
     private bool hasLabel = false;
     private string packedType = "";
+    private string expectedPackedType = "Bottle05"; // правильный тип (из БД)
     
     void Start()
     {
+        // ========= ЗАГРУЗКА ПРАВИЛЬНОЙ ТАРЫ ИЗ БД =========
+        string correctPackagingFromDB = PlayerPrefs.GetString("CorrectPackaging", "стекло_0.5");
+        Debug.Log($"Правильная тара из БД: {correctPackagingFromDB}");
+        
+        // Сопоставляем строку из БД с типом в игре
+        switch (correctPackagingFromDB)
+        {
+            case "стекло_0.33":
+                expectedPackedType = "Bottle033";
+                break;
+            case "стекло_0.5":
+                expectedPackedType = "Bottle05";
+                break;
+            case "стекло_1":
+                expectedPackedType = "Bottle1";
+                break;
+            case "металл_0.33":
+                expectedPackedType = "Can033";
+                break;
+            case "металл_0.5":
+                expectedPackedType = "Can05";
+                break;
+            default:
+                expectedPackedType = "Bottle05";
+                break;
+        }
+        Debug.Log($"Ожидаемый тип упаковки: {expectedPackedType}");
+        // ==================================================
+        
         if (uiManager == null)
             uiManager = FindAnyObjectByType<UIManager>();
         
@@ -51,15 +81,9 @@ public class PackagingManager : MonoBehaviour
         boxWithCan05.SetActive(false);
         sticker.SetActive(false);
         
-        if (stickerButton != null) stickerButton.interactable = false;
-        if (nextButton != null) nextButton.interactable = false;
-        
-        // Восстанавливаем инвентарь
-        Transform panel = GameObject.Find("InventoryPanel")?.transform;
-        if (panel != null && Inventory.Instance != null)
-        {
-            Inventory.Instance.SetInventoryPanel(panel);
-        }
+        // Кнопки всегда активны
+        if (stickerButton != null) stickerButton.interactable = true;
+        if (nextButton != null) nextButton.interactable = true;
         
         // Привязываем кнопки
         if (nextButton != null)
@@ -76,6 +100,13 @@ public class PackagingManager : MonoBehaviour
             Debug.Log("кнопка Sticker привязана к ApplySticker");
         }
         
+        // Восстанавливаем инвентарь
+        Transform panel = GameObject.Find("InventoryPanel")?.transform;
+        if (panel != null && Inventory.Instance != null)
+        {
+            Inventory.Instance.SetInventoryPanel(panel);
+        }
+        
         Debug.Log("PackagingManager Start: inventory = " + (inventory != null ? "найден" : "null"));
     }
     
@@ -84,15 +115,19 @@ public class PackagingManager : MonoBehaviour
     {
         Debug.Log("OnBoxClick вызван");
         
+        if (inventory == null)
+        {
+            inventory = FindAnyObjectByType<Inventory>();
+            if (inventory == null)
+            {
+                Debug.LogError("Inventory не найден!");
+                return;
+            }
+        }
+        
         if (isPacked)
         {
             Debug.Log("Уже упаковано");
-            return;
-        }
-        
-        if (inventory == null)
-        {
-            Debug.LogError("Inventory null");
             return;
         }
         
@@ -120,7 +155,7 @@ public class PackagingManager : MonoBehaviour
             return;
         }
         
-        // Показываем соответствующий ящик в зависимости от типа тары
+        // Показываем соответствующий ящик
         switch (item.itemType)
         {
             case ItemType.GlassBottle033:
@@ -155,12 +190,10 @@ public class PackagingManager : MonoBehaviour
                 return;
         }
         
-        // Удаляем тару из инвентаря и сбрасываем выбор
         inventory.ClearSlot(selectedSlot);
         inventory.SelectSlot(-1);
         
         isPacked = true;
-        if (stickerButton != null) stickerButton.interactable = true;
         
         Debug.Log($"Упакована тара: {item.itemName} (тип: {packedType})");
     }
@@ -185,7 +218,7 @@ public class PackagingManager : MonoBehaviour
         Debug.Log("Этикетка наклеена!");
     }
     
-    // Проверка этапа (аналог CheckStage)
+    // Проверка этапа
     public void CheckStage()
     {
         Debug.Log("CheckStage вызван");
@@ -193,6 +226,8 @@ public class PackagingManager : MonoBehaviour
         // Проверка 1: упаковано ли?
         if (!isPacked)
         {
+            if (ErrorManager.Instance != null)
+                ErrorManager.Instance.AddError("Упаковка: попытка завершить без упаковки");
             if (uiManager != null)
                 uiManager.ShowError("Сначала упакуйте товар!", stageName);
             return;
@@ -201,23 +236,24 @@ public class PackagingManager : MonoBehaviour
         // Проверка 2: наклеена ли этикетка?
         if (!hasLabel)
         {
+            if (ErrorManager.Instance != null)
+                ErrorManager.Instance.AddError("Упаковка: попытка завершить без этикетки");
             if (uiManager != null)
                 uiManager.ShowError("Сначала наклейте этикетку!", stageName);
             return;
         }
         
-        // Проверка 3: правильная ли тара? (только бутылка 0.5л)
-        if (packedType != "Bottle05")
+        // Проверка 3: правильная ли тара? (используем данные из БД)
+        if (packedType != expectedPackedType)
         {
             if (ErrorManager.Instance != null)
-                ErrorManager.Instance.AddError($"Упаковка: выбрана неверная тара ({packedType}). Нужна бутылка 0.5л");
-            
+                ErrorManager.Instance.AddError($"Упаковка: выбрана неверная тара ({packedType}). Нужна {expectedPackedType}");
             if (uiManager != null)
-                uiManager.ShowError("Упакована неправильная тара! Нужна бутылка 0.5л.", stageName);
+                uiManager.ShowError($"Упакована неправильная тара! Нужна бутылка 0.5л.", stageName);
             return;
         }
         
-        // Всё правильно – сохраняем и переходим
+        // Всё правильно
         Debug.Log("Упаковка пройдена успешно");
         
         if (Inventory.Instance != null)
@@ -227,7 +263,16 @@ public class PackagingManager : MonoBehaviour
             uiManager.ShowSuccess("Упаковка пройдена!", nextScene, stageName);
     }
     
-    // Сброс этапа
+    public void NextScene()
+    {
+        Debug.Log($"=== NextScene() ВЫЗВАН НА ЭТАПЕ {stageName} ===");
+        
+        if (Inventory.Instance != null)
+            Inventory.Instance.SaveItems();
+        
+        SceneManager.LoadScene(nextScene);
+    }
+    
     public void RestartStage()
     {
         Debug.Log("RestartStage вызван");
@@ -244,7 +289,6 @@ public class PackagingManager : MonoBehaviour
         boxWithCan05.SetActive(false);
         sticker.SetActive(false);
         
-        if (stickerButton != null) stickerButton.interactable = false;
-        if (nextButton != null) nextButton.interactable = false;
+        Debug.Log("Этап упаковки перезапущен");
     }
 }
