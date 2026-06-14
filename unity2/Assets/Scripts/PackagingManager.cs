@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using System.Collections;
 
 public class PackagingManager : MonoBehaviour
 {
@@ -220,48 +221,59 @@ public class PackagingManager : MonoBehaviour
     
     // Проверка этапа
     public void CheckStage()
+{
+    Debug.Log($"=== CheckStage ===");
+    Debug.Log($"isPacked={isPacked}, hasLabel={hasLabel}, packedType={packedType}, expectedPackedType={expectedPackedType}");
+    
+    if (!isPacked)
     {
-        Debug.Log("CheckStage вызван");
-        
-        // Проверка 1: упаковано ли?
-        if (!isPacked)
-        {
-            if (ErrorManager.Instance != null)
-                ErrorManager.Instance.AddError("Упаковка: попытка завершить без упаковки");
-            if (uiManager != null)
-                uiManager.ShowError("Сначала упакуйте товар!", stageName);
-            return;
-        }
-        
-        // Проверка 2: наклеена ли этикетка?
-        if (!hasLabel)
-        {
-            if (ErrorManager.Instance != null)
-                ErrorManager.Instance.AddError("Упаковка: попытка завершить без этикетки");
-            if (uiManager != null)
-                uiManager.ShowError("Сначала наклейте этикетку!", stageName);
-            return;
-        }
-        
-        // Проверка 3: правильная ли тара? (используем данные из БД)
-        if (packedType != expectedPackedType)
-        {
-            if (ErrorManager.Instance != null)
-                ErrorManager.Instance.AddError($"Упаковка: выбрана неверная тара ({packedType}). Нужна {expectedPackedType}");
-            if (uiManager != null)
-                uiManager.ShowError($"Упакована неправильная тара! Нужна бутылка 0.5л.", stageName);
-            return;
-        }
-        
-        // Всё правильно
-        Debug.Log("Упаковка пройдена успешно");
-        
-        if (Inventory.Instance != null)
-            Inventory.Instance.SaveItems();
-        
+        Debug.Log("ОШИБКА: не упаковано");
+        if (ErrorManager.Instance != null)
+            ErrorManager.Instance.AddError("Упаковка: попытка завершить без упаковки");
         if (uiManager != null)
-            uiManager.ShowSuccess("Упаковка пройдена!", nextScene, stageName);
+            uiManager.ShowError("Сначала упакуйте товар!", stageName);
+        return;
     }
+    Debug.Log("✓ Упаковано");
+    
+    if (!hasLabel)
+    {
+        Debug.Log("ОШИБКА: нет этикетки");
+        if (ErrorManager.Instance != null)
+            ErrorManager.Instance.AddError("Упаковка: попытка завершить без этикетки");
+        if (uiManager != null)
+            uiManager.ShowError("Сначала наклейте этикетку!", stageName);
+        return;
+    }
+    Debug.Log("✓ Этикетка есть");
+    
+    if (packedType != expectedPackedType)
+    {
+        Debug.Log($"ОШИБКА: неверная тара ({packedType} != {expectedPackedType})");
+        if (ErrorManager.Instance != null)
+            ErrorManager.Instance.AddError($"Упаковка: выбрана неверная тара ({packedType}). Нужна {expectedPackedType}");
+        if (uiManager != null)
+            uiManager.ShowError($"Упакована неправильная тара! Нужна бутылка 0.5л.", stageName);
+        return;
+    }
+    Debug.Log("✓ Тара правильная");
+    
+    Debug.Log("ВСЁ ПРАВИЛЬНО! Вызываем ShowSuccess");
+    
+    if (Inventory.Instance != null)
+        Inventory.Instance.SaveItems();
+    
+    StartCoroutine(ShowSuccessWithDelay()); 
+    Debug.Log("ПРЯМОЙ ТЕСТ: активация панели вручную");
+    uiManager.successPanel.SetActive(true);
+}
+
+IEnumerator ShowSuccessWithDelay()
+{
+    yield return new WaitForSeconds(0.2f);
+    if (uiManager != null)
+        uiManager.ShowSuccess("Упаковка пройдена!", nextScene, stageName);
+}
     
     public void NextScene()
     {

@@ -26,7 +26,7 @@ public class FermentationManager : MonoBehaviour
         timeMin = PlayerPrefs.GetInt("TimeMin", 5);
         timeMax = PlayerPrefs.GetInt("TimeMax", 7);
         Debug.Log($"Параметры брожения из БД: {tempMin}-{tempMax}°C, {timeMin}-{timeMax} дней");
-        
+
         Debug.Log("=== сцена брожения ===");
         
         if (uiManager == null)
@@ -73,7 +73,7 @@ public class FermentationManager : MonoBehaviour
         }
         else
         {
-            Debug.LogError("кнопка 'Button_ToPackaging' не найдена");
+            Debug.LogError("кнопка не найдена");
         }
     }
 
@@ -99,9 +99,9 @@ public class FermentationManager : MonoBehaviour
             return;
         }
         
-        float temp = temperatureSlider.value;
+        float temp = Mathf.Round(temperatureSlider.value * 10f) / 10f;
         int time = (int)timeSlider.value;
-        
+
         bool tempOk = (temp >= tempMin && temp <= tempMax);
         bool timeOk = (time >= timeMin && time <= timeMax);
         
@@ -122,10 +122,7 @@ public class FermentationManager : MonoBehaviour
         else
         {
             Debug.Log("Параметры брожения в норме");
-            
-            // ========= ИСПРАВЛЕНО: вызов с задержкой =========
             StartCoroutine(ShowSuccessWithDelay());
-            // ================================================
         }
         
         if (Inventory.Instance != null)
@@ -134,10 +131,13 @@ public class FermentationManager : MonoBehaviour
     
     IEnumerator ShowSuccessWithDelay()
     {
-        // Ждём 0.1 секунды, чтобы UIManager успел найти панели
-        yield return new WaitForSeconds(0.1f);
-        
-        if (uiManager != null)
-            uiManager.ShowSuccess("Брожение пройдено!", nextScene, stageName);
+        Debug.Log("ShowSuccessWithDelay: START");
+    yield return new WaitForSeconds(0.2f);
+    Debug.Log("ShowSuccessWithDelay: после задержки");
+    
+    if (uiManager != null)
+        uiManager.ShowSuccess("Брожение пройдено!", nextScene, stageName);
+    else
+        Debug.LogError("ShowSuccessWithDelay: uiManager = null!");
     }
 }
