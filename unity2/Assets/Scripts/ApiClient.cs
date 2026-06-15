@@ -20,10 +20,12 @@ public class ApiClient : MonoBehaviour
         }
     }
     
-    // Сохранение результатов игры
     public IEnumerator SaveResult(string sessionId, string grade, string errorReport, 
         int regulationId, int rulesId, System.Action<bool> onComplete)
     {
+        Debug.Log($"=== SAVE RESULT START ===");
+        Debug.Log($"URL: {BASE_URL}/api/results");
+        Debug.Log($"sessionId={sessionId}, grade={grade}, regId={regulationId}, rulesId={rulesId}");
         ResultData result = new ResultData
         {
             session_id = sessionId,
@@ -34,6 +36,7 @@ public class ApiClient : MonoBehaviour
         };
         
         string json = JsonUtility.ToJson(result);
+        Debug.Log($"JSON для отправки: {json}");
         
         using (UnityWebRequest request = new UnityWebRequest(BASE_URL + "/api/results", "POST"))
         {
@@ -51,13 +54,14 @@ public class ApiClient : MonoBehaviour
             }
             else
             {
+                string responseText = request.downloadHandler.text;
                 Debug.LogError($"Ошибка сохранения: {request.error}");
+                Debug.LogError($"Ответ сервера: {responseText}");
                 onComplete?.Invoke(false);
             }
         }
     }
     
-    // Получение регламента (если нужно)
     public IEnumerator GetRegulations(System.Action<RegulationsData> onSuccess, System.Action<string> onError)
     {
         using (UnityWebRequest request = UnityWebRequest.Get(BASE_URL + "/api/regulations"))
@@ -77,7 +81,6 @@ public class ApiClient : MonoBehaviour
         }
     }
     
-    // Получение правил игры (если нужно)
     public IEnumerator GetGameRules(System.Action<GameRulesData> onSuccess, System.Action<string> onError)
     {
         using (UnityWebRequest request = UnityWebRequest.Get(BASE_URL + "/api/rules"))
@@ -97,7 +100,6 @@ public class ApiClient : MonoBehaviour
         }
     }
     
-    // Классы для парсинга JSON
     [System.Serializable]
     public class RegulationsData
     {

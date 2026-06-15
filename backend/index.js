@@ -12,13 +12,18 @@ app.use(cors());
 app.use(express.json());
 
 app.use((req, res, next) => {
+    console.log(` ${req.method} ${req.url}`);
+    next();
+});
+
+app.use((req, res, next) => {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     next();
 });
 
 app.get('/api/regulations', async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM Regulations WHERE id = 1');
+        const result = await pool.query('SELECT * FROM regulations WHERE id = 1');
         res.json(result.rows[0]);
     } catch (err) {
         console.error(err);
@@ -28,7 +33,7 @@ app.get('/api/regulations', async (req, res) => {
 
 app.get('/api/rules', async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM GameRules WHERE id = 1');
+        const result = await pool.query('SELECT * FROM gamerules WHERE id = 1');
         res.json(result.rows[0]);
     } catch (err) {
         console.error(err);
@@ -39,24 +44,31 @@ app.get('/api/rules', async (req, res) => {
 app.post('/api/results', async (req, res) => {
     const { session_id, grade, error_report, regulation_id, rules_id } = req.body;
     
+    console.log('Получены данные:', { session_id, grade, error_report, regulation_id, rules_id });
+    
     try {
         const result = await pool.query(
-            `INSERT INTO GameResults (session_id, regulation_id, rules_id, grade, error_report) 
+            `INSERT INTO gameresults (session_id, regulation_id, rules_id, grade, error_report) 
              VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-            [session_id, regulation_id || 1, rules_id || 1, grade, error_report]
+            [session_id, regulation_id || 1, rules_id || 1, grade, error_report || '']
         );
-        console.log('результаты сохрнены в бд, id:', result.rows[0].id);
-        res.json({ status: 'ok', id: result.rows[0].id, message: 'результаты сохранены' });
+        console.log('Сохранено, id:', result.rows[0].id);
+        res.json({ status: 'ok', id: result.rows[0].id });
     } catch (err) {
-        console.error('ошибка сохранения:', err);
-        res.status(500).json({ error: 'ошибка сохранения результатов' });
+        console.error('Ошибка бд:');
+        console.error('  - код:', err.code);
+        console.error('  - сообщение:', err.message);
+        console.error('  - деталь:', err.detail);
+        console.error('  - таблица:', err.table);
+        console.error('  - столбец:', err.column);
+        res.status(500).json({ error: err.message, detail: err.detail });
     }
 });
 
 app.get('/api/results', async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM GameResults ORDER BY id DESC LIMIT 100');
-        console.log('получен запрос на /api/results, найдено записей:', result.rows.length);
+        const result = await pool.query('SELECT * FROM gameresults ORDER BY id DESC LIMIT 100');
+        console.log('запрос результатов, найдено:', result.rows.length);
         res.json(result.rows);
     } catch (err) {
         console.error('ошибка загрузки результатов:', err);
@@ -69,7 +81,7 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`сервер запущен на http://localhost:${PORT}`);
+    console.log(`Сервер запущен на http://localhost:${PORT}`);
     console.log(`доступные эндпоинты:`);
     console.log(`   GET  /api/regulations`);
     console.log(`   GET  /api/rules`);

@@ -130,14 +130,12 @@ public class FermentationManager : MonoBehaviour
     }
     
     IEnumerator ShowSuccessWithDelay()
-    {
-        Debug.Log("ShowSuccessWithDelay: START");
+{
     yield return new WaitForSeconds(0.2f);
-    Debug.Log("ShowSuccessWithDelay: после задержки");
     
-    if (uiManager != null)
-        uiManager.ShowSuccess("Брожение пройдено!", nextScene, stageName);
+    if (UIManager.Instance != null)
+        UIManager.Instance.ShowSuccess("Брожение пройдено!", nextScene, stageName);
     else
-        Debug.LogError("ShowSuccessWithDelay: uiManager = null!");
-    }
+        Debug.LogError("UIManager.Instance = null!");
+}
 }

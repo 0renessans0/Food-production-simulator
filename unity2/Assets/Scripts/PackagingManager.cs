@@ -271,6 +271,10 @@ public class PackagingManager : MonoBehaviour
 IEnumerator ShowSuccessWithDelay()
 {
     yield return new WaitForSeconds(0.2f);
+    
+    if (uiManager == null)
+        uiManager = FindAnyObjectByType<UIManager>();
+    
     if (uiManager != null)
         uiManager.ShowSuccess("Упаковка пройдена!", nextScene, stageName);
 }
@@ -283,24 +287,5 @@ IEnumerator ShowSuccessWithDelay()
             Inventory.Instance.SaveItems();
         
         SceneManager.LoadScene(nextScene);
-    }
-    
-    public void RestartStage()
-    {
-        Debug.Log("RestartStage вызван");
-        
-        isPacked = false;
-        hasLabel = false;
-        packedType = "";
-        
-        emptyBox.SetActive(true);
-        boxWithBottle033.SetActive(false);
-        boxWithBottle05.SetActive(false);
-        boxWithBottle1.SetActive(false);
-        boxWithCan033.SetActive(false);
-        boxWithCan05.SetActive(false);
-        sticker.SetActive(false);
-        
-        Debug.Log("Этап упаковки перезапущен");
     }
 }
