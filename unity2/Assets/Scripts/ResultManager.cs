@@ -14,6 +14,7 @@ public class ResultManager : MonoBehaviour
     private float weightStage2 = 0.35f;
     private float weightStage3 = 0.35f;
     private float weightStage4 = 0.15f;
+    private bool isResultSaved = false;
 
     void Start()
     {
@@ -38,32 +39,37 @@ public class ResultManager : MonoBehaviour
     void CalculateAndDisplayResults()
     {
         Debug.Log($"=== ErrorManager.Instance = {(ErrorManager.Instance != null ? "ЕСТЬ" : "NULL")} ===");
+        
+        int errorsStage1 = 0, errorsStage2 = 0, errorsStage3 = 0, errorsStage4 = 0;
+        List<string> errorMessages = new List<string>();
+
         if (ErrorManager.Instance != null)
         {
             Debug.Log($"Количество ошибок в ErrorManager: {ErrorManager.Instance.errors.Count}");
+            
             foreach (string err in ErrorManager.Instance.errors)
             {
-                Debug.Log($"Ошибка: {err}");
+                Debug.Log($"Ошибка из ErrorManager: {err}");
+                
+                if (err.Contains("Приёмка") || err.Contains("приёмка"))
+                    errorsStage1++;
+                else if (err.Contains("Замес") || err.Contains("замес"))
+                    errorsStage2++;
+                else if (err.Contains("Брожение") || err.Contains("брожение"))
+                    errorsStage3++;
+                else if (err.Contains("Упаковка") || err.Contains("упаковка"))
+                    errorsStage4++;
+                
+                errorMessages.Add(err);
             }
         }
         else
         {
             Debug.LogError("ErrorManager.Instance = NULL! Ошибки не будут сохранены!");
         }
-        int errorsStage1 = 0, errorsStage2 = 0, errorsStage3 = 0, errorsStage4 = 0;
-        List<string> errorMessages = new List<string>();
 
-        if (ErrorManager.Instance != null)
-        {
-            foreach (string err in ErrorManager.Instance.errors)
-            {
-                if (err.Contains("Приёмка")) errorsStage1++;
-                else if (err.Contains("Замес")) errorsStage2++;
-                else if (err.Contains("Брожение")) errorsStage3++;
-                else if (err.Contains("Упаковка")) errorsStage4++;
-                errorMessages.Add(err);
-            }
-        }
+        Debug.Log($"errorsStage1={errorsStage1}, errorsStage2={errorsStage2}, errorsStage3={errorsStage3}, errorsStage4={errorsStage4}");
+        Debug.Log($"errorMessages.Count = {errorMessages.Count}");
 
         float score1 = ErrorsToScore(errorsStage1);
         float score2 = ErrorsToScore(errorsStage2);
@@ -82,26 +88,62 @@ public class ResultManager : MonoBehaviour
         if (titleText != null)
             titleText.text = $"{grade} | {totalScore:F1} / 100";
 
+        // ========= УЛУЧШЕННОЕ ОТОБРАЖЕНИЕ ОШИБОК =========
         if (errorListText != null)
         {
-            string errorText = errorMessages.Count > 0 ? string.Join("\n", errorMessages) : "Все этапы пройдены без ошибок";
+            string errorText;
+            if (errorMessages.Count > 0)
+            {
+                List<string> uniqueErrors = new List<string>(new HashSet<string>(errorMessages));
+
+                errorText = "<color=#FF6B6B>Допущены ошибки:</color>\n";
+                for (int i = 0; i < uniqueErrors.Count; i++)
+                {
+                    errorText += $"  • {uniqueErrors[i]}\n";
+                }
+            }
+            else
+            {
+                errorText = "<color=#4ECDC4>✓ Все этапы пройдены без ошибок</color>";
+            }
             errorListText.text = errorText;
+            Debug.Log($"errorListText обновлён");
+        }
+        else
+        {
+            Debug.LogError("errorListText = NULL!");
         }
         
-        SaveResultToServer(grade, totalScore, errorMessages);
+        // ========= СОХРАНЕНИЕ ТОЛЬКО ОДИН РАЗ =========
+        if (!isResultSaved)
+        {
+            SaveResultToServer(grade, totalScore, errorMessages);
+            isResultSaved = true;
+        }
     }
     
     void SaveResultToServer(string grade, float totalScore, List<string> errorMessages)
     {
         Debug.Log($"=== SAVE RESULT TO SERVER ===");
-        Debug.Log($"ApiClient.Instance = {(ApiClient.Instance != null ? "есть" : "null")}");
+        
+        if (ApiClient.Instance == null)
+        {
+            Debug.LogError("ApiClient.Instance = null! Невозможно сохранить результаты.");
+            return;
+        }
+        
+        Debug.Log($"ApiClient.Instance = есть");
         
         string sessionId = System.Guid.NewGuid().ToString();
         string gradeText = $"{grade} | {totalScore:F1} / 100";
         
-        string errorReport = string.Join(" ", errorMessages); 
-        errorReport = Regex.Replace(errorReport, @"[^\w\s\.\,\-\!\?]", ""); 
-        errorReport = errorReport.Replace("\"", "'"); 
+        // ========= УБИРАЕМ ДУБЛИ И СКЛЕИВАЕМ ЧЕРЕЗ "; " =========
+        List<string> uniqueErrors = new List<string>(new HashSet<string>(errorMessages));
+        string errorReport = string.Join("; ", uniqueErrors);
+        
+        // Очистка от спецсимволов
+        errorReport = Regex.Replace(errorReport, @"[^\w\s\.\,\-\!\?]", "");
+        errorReport = errorReport.Replace("\"", "'");
         errorReport = errorReport.Replace("\n", " ").Replace("\r", " ");
         
         Debug.Log($"errorReport (очищенный): {errorReport}");
@@ -120,9 +162,11 @@ public class ResultManager : MonoBehaviour
     public void RestartGame()
     {
         if (ErrorManager.Instance != null)
-            ErrorManager.Instance.errors.Clear();
+            ErrorManager.Instance.ClearErrors();
         
-        SceneManager.LoadScene("StartScan");
+        isResultSaved = false;
+        
+        SceneManager.LoadScene("StartScen");
     }
 
     public void ExitToWebsite()

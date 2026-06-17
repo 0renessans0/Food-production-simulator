@@ -86,12 +86,11 @@ public class AcceptanceManager : MonoBehaviour
         }
         else
         {
-            // ========= ДОБАВЛЕНО: фиксация ошибки в ErrorManager =========
             if (ErrorManager.Instance != null)
             {
+                Debug.Log($"[AcceptanceManager] ErrorManager.Instance = {(ErrorManager.Instance != null ? "ЕСТЬ" : "NULL")}");
                 ErrorManager.Instance.AddError($"Приёмка: не все товары приняты. Пустых слотов: {emptySlots}");
             }
-            // ============================================================
             
             uiManager.ShowError("Не все ингредиенты приняты. Проверьте слоты.", stageName);
         }

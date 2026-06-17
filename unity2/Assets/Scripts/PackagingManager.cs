@@ -137,7 +137,7 @@ public class PackagingManager : MonoBehaviour
         
         if (selectedSlot == -1)
         {
-            Debug.Log("❌ Сначала выберите тару в инвентаре!");
+            Debug.Log(" Сначала выберите тару в инвентаре!");
             if (uiManager != null)
                 uiManager.ShowError("Сначала выберите тару в инвентаре!", stageName);
             return;

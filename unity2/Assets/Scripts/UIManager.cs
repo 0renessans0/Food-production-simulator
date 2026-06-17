@@ -203,26 +203,21 @@ public class UIManager : MonoBehaviour
     public void OnErrorRestart()
     {
         Debug.Log("on error restart вызван");
-
         if (errorPanel != null)
-            errorPanel.SetActive(false);
-
-        if (ErrorManager.Instance != null)
-            ErrorManager.Instance.ClearErrors();
-
+        errorPanel.SetActive(false);
         if (Inventory.Instance != null)
+        
         {
             for (int i = 0; i < Inventory.Instance.items.Count; i++)
-                Inventory.Instance.ClearSlot(i);
+            Inventory.Instance.ClearSlot(i);
 
             for (int i = 0; i < Inventory.Instance.savedItems.Count && i < Inventory.Instance.items.Count; i++)
             {
                 var saved = Inventory.Instance.savedItems[i];
                 if (saved.itemData != null)
-                    Inventory.Instance.AddItem(i, saved.itemData, saved.count);
+                Inventory.Instance.AddItem(i, saved.itemData, saved.count);
             }
         }
-
         string sceneName = SceneManager.GetActiveScene().name;
         Debug.Log($"перезагрузка сцены {sceneName}");
         SceneManager.LoadScene(sceneName);
