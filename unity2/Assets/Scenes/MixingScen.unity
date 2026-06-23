@@ -573,10 +573,10 @@ RectTransform:
   - {fileID: 1886033351}
   m_Father: {fileID: 722481739}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 352.03137}
-  m_SizeDelta: {x: 1797.75, y: 173.55688}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: -4.125, y: -190.776}
+  m_SizeDelta: {x: -580.25, y: 194.41461}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!102 &291189981
 TextMesh:

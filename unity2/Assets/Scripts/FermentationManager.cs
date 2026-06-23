@@ -116,8 +116,7 @@ public class FermentationManager : MonoBehaviour
             
             Debug.Log($"Ошибка брожения: {error}");
             
-            if (uiManager != null)
-                uiManager.ShowError($"Ошибка брожения: {error}", stageName);
+            StartCoroutine(ShowErrorWithDelay($"Ошибка брожения: {error}"));
         }
         else
         {
@@ -137,5 +136,12 @@ public class FermentationManager : MonoBehaviour
         UIManager.Instance.ShowSuccess("Брожение пройдено!", nextScene, stageName);
     else
         Debug.LogError("UIManager.Instance = null!");
+}
+
+IEnumerator ShowErrorWithDelay(string message)
+{
+    yield return new WaitForSeconds(0.2f);
+    if (UIManager.Instance != null)
+        UIManager.Instance.ShowError(message, stageName);
 }
 }
