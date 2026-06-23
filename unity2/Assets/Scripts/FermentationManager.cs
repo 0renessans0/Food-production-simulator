@@ -27,22 +27,22 @@ public class FermentationManager : MonoBehaviour
         timeMax = PlayerPrefs.GetInt("TimeMax", 7);
         Debug.Log($"Параметры брожения из БД: {tempMin}-{tempMax}°C, {timeMin}-{timeMax} дней");
 
-        Debug.Log("=== сцена брожения ===");
-        
+        Debug.Log("сцена брожения");
+
         if (uiManager == null)
             uiManager = FindAnyObjectByType<UIManager>();
-        
+
         UIManager.Instance.FindPanelsOnCurrentScene();
-        
+
         Transform panel = GameObject.Find("InventoryPanel")?.transform;
         if (panel != null && Inventory.Instance != null)
         {
             Inventory.Instance.SetInventoryPanel(panel);
-            
+
             var saved = Inventory.Instance.savedItems;
             if (saved != null && saved.Count > 0)
             {
-                Debug.Log($"Восстанавливаем {saved.Count} предметов");
+                Debug.Log($"восстановлено {saved.Count} предметов");
                 for (int i = 0; i < saved.Count && i < Inventory.Instance.items.Count; i++)
                 {
                     if (saved[i].itemData != null)
@@ -55,7 +55,7 @@ public class FermentationManager : MonoBehaviour
                 }
             }
         }
-        
+
         UpdateTempDisplay();
         UpdateTimeDisplay();
 
@@ -63,7 +63,7 @@ public class FermentationManager : MonoBehaviour
             temperatureSlider.onValueChanged.AddListener((v) => UpdateTempDisplay());
         if (timeSlider != null)
             timeSlider.onValueChanged.AddListener((v) => UpdateTimeDisplay());
-        
+
         Button nextButton = GameObject.Find("Button_ToPackaging")?.GetComponent<Button>();
         if (nextButton != null)
         {
@@ -77,71 +77,99 @@ public class FermentationManager : MonoBehaviour
         }
     }
 
-    void UpdateTempDisplay()
+    public void UpdateTempDisplay()
     {
         if (tempValueText != null && temperatureSlider != null)
-            tempValueText.text = temperatureSlider.value.ToString("F1") + "°C";
+        {
+            float value = temperatureSlider.value;
+            tempValueText.text = value.ToString("F1") + "°C";
+
+            Image fillImage = temperatureSlider.fillRect?.GetComponent<Image>();
+            if (fillImage != null)
+            {
+                if (value >= tempMin && value <= tempMax)
+                    fillImage.color = Color.green;
+                else if (value < tempMin)
+                    fillImage.color = new Color(1f, 0.5f, 0f);
+                else
+                    fillImage.color = Color.red;
+            }
+        }
     }
 
-    void UpdateTimeDisplay()
+    public void UpdateTimeDisplay()
     {
         if (timeValueText != null && timeSlider != null)
-            timeValueText.text = timeSlider.value.ToString("F0") + " дн.";
+        {
+            float value = timeSlider.value;
+            timeValueText.text = value.ToString("F0") + " дн.";
+
+            Image fillImage = timeSlider.fillRect?.GetComponent<Image>();
+            if (fillImage != null)
+            {
+                if (value >= timeMin && value <= timeMax)
+                    fillImage.color = Color.green;
+                else if (value < timeMin)
+                    fillImage.color = new Color(1f, 0.5f, 0f);
+                else
+                    fillImage.color = Color.red;
+            }
+        }
     }
 
     public void CheckStage()
     {
         Debug.Log("CheckStage вызван");
-        
+
         if (temperatureSlider == null || timeSlider == null)
         {
-            Debug.LogError("Слайдеры не назначены!");
+            Debug.LogError("сайдеры не назначены");
             return;
         }
-        
+
         float temp = Mathf.Round(temperatureSlider.value * 10f) / 10f;
         int time = (int)timeSlider.value;
 
         bool tempOk = (temp >= tempMin && temp <= tempMax);
         bool timeOk = (time >= timeMin && time <= timeMax);
-        
+
         if (!tempOk || !timeOk)
         {
             string error = "";
             if (!tempOk) error += $"Температура {temp}°C (норма {tempMin}-{tempMax}). ";
             if (!timeOk) error += $"Время {time} дн. (норма {timeMin}-{timeMax}). ";
-            
+
             if (ErrorManager.Instance != null)
                 ErrorManager.Instance.AddError($"Брожение: {error}");
-            
-            Debug.Log($"Ошибка брожения: {error}");
-            
+
+            Debug.Log($"ошибка брожения: {error}");
+
             StartCoroutine(ShowErrorWithDelay($"Ошибка брожения: {error}"));
         }
         else
         {
-            Debug.Log("Параметры брожения в норме");
+            Debug.Log("параметры в норме");
             StartCoroutine(ShowSuccessWithDelay());
         }
-        
+
         if (Inventory.Instance != null)
             Inventory.Instance.SaveItems();
     }
-    
-    IEnumerator ShowSuccessWithDelay()
-{
-    yield return new WaitForSeconds(0.2f);
-    
-    if (UIManager.Instance != null)
-        UIManager.Instance.ShowSuccess("Брожение пройдено!", nextScene, stageName);
-    else
-        Debug.LogError("UIManager.Instance = null!");
-}
 
-IEnumerator ShowErrorWithDelay(string message)
-{
-    yield return new WaitForSeconds(0.2f);
-    if (UIManager.Instance != null)
-        UIManager.Instance.ShowError(message, stageName);
-}
+    IEnumerator ShowSuccessWithDelay()
+    {
+        yield return new WaitForSeconds(0.2f);
+
+        if (UIManager.Instance != null)
+            UIManager.Instance.ShowSuccess("Брожение пройдено!", nextScene, stageName);
+        else
+            Debug.LogError("UIManager.Instance = null!");
+    }
+
+    IEnumerator ShowErrorWithDelay(string message)
+    {
+        yield return new WaitForSeconds(0.2f);
+        if (UIManager.Instance != null)
+            UIManager.Instance.ShowError(message, stageName);
+    }
 }

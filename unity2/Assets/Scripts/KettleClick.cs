@@ -7,7 +7,6 @@ public class KettleClick : MonoBehaviour
 
     void Start()
     {
-        // Пытаемся найти, но не падаем, если не нашли
         TryFindComponents();
     }
 
@@ -15,43 +14,49 @@ public class KettleClick : MonoBehaviour
     {
         if (mixingManager == null)
             mixingManager = FindAnyObjectByType<MixingManager>();
-        
+
         if (inventory == null)
         {
             inventory = Inventory.Instance;
             if (inventory == null)
                 inventory = FindAnyObjectByType<Inventory>();
         }
+
+        Debug.Log($"kettle click: mixing manager = {(mixingManager != null ? "найден" : "не найден")}");
+        Debug.Log($"kettle click: inventory = {(inventory != null ? "найден" : "не найден")}");
     }
 
     public void OnKettleClick()
     {
-        // Ищем КАЖДЫЙ РАЗ при клике
-        TryFindComponents();
-        
         if (inventory == null)
         {
-            Debug.LogError("inventory равен null! Не могу добавить ингредиент.");
-            return;
+            inventory = Inventory.Instance;
+            if (inventory == null)
+                inventory = FindAnyObjectByType<Inventory>();
         }
-        
+
         if (mixingManager == null)
         {
-            Debug.LogError("mixingManager равен null! Не могу добавить ингредиент.");
-            return;
+            mixingManager = FindAnyObjectByType<MixingManager>();
         }
-        
-        int selectedSlot = inventory.GetSelectedSlot();
-        
-        if (selectedSlot == -1)
+
+        if (inventory == null)
         {
-            Debug.Log("сначала выберите ингредиент в инвентаре");
+            Debug.LogError("inventory равен null");
             return;
         }
 
-        if (selectedSlot >= 4) 
+        if (mixingManager == null)
         {
-            Debug.Log($"слот {selectedSlot} не является ингредиентом для замеса");
+            Debug.LogError("mixingManager равен null");
+            return;
+        }
+
+        int selectedSlot = inventory.GetSelectedSlot();
+
+        if (selectedSlot == -1)
+        {
+            Debug.Log("сначала выберите ингредиент в инвентаре");
             return;
         }
 
@@ -68,6 +73,8 @@ public class KettleClick : MonoBehaviour
         }
 
         mixingManager.AddIngredientFromSlot(selectedSlot);
-        inventory.SelectSlot(-1);
+
+        if (selectedSlot != -1)
+            inventory.SelectSlot(-1);
     }
 }

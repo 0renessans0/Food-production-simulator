@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using System.Collections;
 
 public class MixingManager : MonoBehaviour
 {
@@ -9,7 +10,6 @@ public class MixingManager : MonoBehaviour
     public Slider progressBar;
     public string nextScene = "FermentationScen";
     public string stageName = "Замес";
-
     private int ingredientsAdded = 0;
     private int requiredIngredients = 4;
     private bool[] ingredientUsed = new bool[4];
@@ -54,6 +54,7 @@ public class MixingManager : MonoBehaviour
         {
             progressBar.maxValue = requiredIngredients;
             progressBar.value = 0;
+            UpdateProgressBarColor(0);
         }
 
         Button nextButton = GameObject.Find("Button_ToFermentation")?.GetComponent<Button>();
@@ -63,6 +64,17 @@ public class MixingManager : MonoBehaviour
             nextButton.onClick.AddListener(() => CheckStage());
             Debug.Log("кнопка привязана к CheckStage");
         }
+    }
+
+    void UpdateProgressBarColor(float value)
+    {
+        if (progressBar == null) return;
+
+        Image fillImage = progressBar.fillRect?.GetComponent<Image>();
+        if (fillImage == null) return;
+
+        float percent = value / requiredIngredients;
+        fillImage.color = Color.Lerp(Color.red, Color.green, percent);
     }
 
     public void AddIngredientFromSlot(int slotIndex)
@@ -95,7 +107,9 @@ public class MixingManager : MonoBehaviour
             Debug.Log($"добавлен не тот ингредиент: {item.itemName}");
 
             if (ErrorManager.Instance != null)
-                ErrorManager.Instance.AddError($"замес: добавлен {item.itemName} не ингредиент");
+                ErrorManager.Instance.AddError($"Замес: добавлен {item.itemName} не ингредиент");
+
+            StartCoroutine(ShowErrorWithDelay($"Нельзя добавить {item.itemName} в котел!"));
             return;
         }
 
@@ -103,7 +117,9 @@ public class MixingManager : MonoBehaviour
         {
             Debug.Log($"ингредиент {item.itemName} уже добавлялся");
             if (ErrorManager.Instance != null)
-                ErrorManager.Instance.AddError($"замес: повторное добавление {item.itemName}");
+                ErrorManager.Instance.AddError($"Замес: повторное добавление {item.itemName}");
+
+            StartCoroutine(ShowErrorWithDelay($"Ингредиент {item.itemName} уже добавлен!"));
             return;
         }
 
@@ -111,7 +127,10 @@ public class MixingManager : MonoBehaviour
         ingredientsAdded++;
 
         if (progressBar != null)
+        {
             progressBar.value = ingredientsAdded;
+            UpdateProgressBarColor(ingredientsAdded);
+        }
 
         inventory.ClearSlot(slotIndex);
 
@@ -141,7 +160,7 @@ public class MixingManager : MonoBehaviour
             errorMessage = $"добавлено {wrongIngredientsAdded} неправильных ингредиентов ";
 
             if (ErrorManager.Instance != null)
-                ErrorManager.Instance.AddError($"замес: {errorMessage}");
+                ErrorManager.Instance.AddError($"Замес: {errorMessage}");
         }
 
         if (ingredientsAdded < requiredIngredients)
@@ -150,12 +169,12 @@ public class MixingManager : MonoBehaviour
             errorMessage += $"добавлено только {ingredientsAdded} из {requiredIngredients} правильных ингредиентов ";
 
             if (ErrorManager.Instance != null)
-                ErrorManager.Instance.AddError($"замес: {errorMessage}");
+                ErrorManager.Instance.AddError($"Замес: {errorMessage}");
         }
 
         if (hasError)
         {
-            uiManager.ShowError($"ошибка замеса {errorMessage}", stageName);
+            StartCoroutine(ShowErrorWithDelay($"Ошибка замеса: {errorMessage}"));
         }
         else
         {
@@ -164,8 +183,26 @@ public class MixingManager : MonoBehaviour
             if (Inventory.Instance != null)
                 Inventory.Instance.SaveItems();
 
-            uiManager.ShowSuccess("замес пройден", nextScene, stageName);
+            StartCoroutine(ShowSuccessWithDelay("Замес пройден!"));
         }
+    }
+
+    IEnumerator ShowSuccessWithDelay(string message)
+    {
+        yield return new WaitForSeconds(0.2f);
+        if (UIManager.Instance != null)
+            UIManager.Instance.ShowSuccess(message, nextScene, stageName);
+        else
+            Debug.LogError("UIManager.Instance = null! Не удалось показать панель успеха.");
+    }
+
+    IEnumerator ShowErrorWithDelay(string message)
+    {
+        yield return new WaitForSeconds(0.2f);
+        if (UIManager.Instance != null)
+            UIManager.Instance.ShowError(message, stageName);
+        else
+            Debug.LogError("UIManager.Instance = null! Не удалось показать панель ошибки.");
     }
 
     public void NextScene()

@@ -21,13 +21,13 @@ public class PackagingManager : MonoBehaviour
     private bool isPacked = false;
     private bool hasLabel = false;
     private string packedType = "";
-    private string expectedPackedType = "Bottle05"; 
-    
+    private string expectedPackedType = "Bottle05";
+
     void Start()
     {
         string correctPackagingFromDB = PlayerPrefs.GetString("CorrectPackaging", "стекло_0.5");
         Debug.Log($"Правильная тара из БД: {correctPackagingFromDB}");
-        
+
         switch (correctPackagingFromDB)
         {
             case "стекло_0.33":
@@ -50,19 +50,19 @@ public class PackagingManager : MonoBehaviour
                 break;
         }
         Debug.Log($"Ожидаемый тип упаковки: {expectedPackedType}");
-        
+
         if (uiManager == null)
             uiManager = FindAnyObjectByType<UIManager>();
-        
+
         if (inventory == null)
         {
             inventory = Inventory.Instance;
             if (inventory == null)
                 inventory = FindAnyObjectByType<Inventory>();
         }
-        
+
         UIManager.Instance.FindPanelsOnCurrentScene();
-        
+
         emptyBox.SetActive(true);
         boxWithBottle033.SetActive(false);
         boxWithBottle05.SetActive(false);
@@ -70,76 +70,76 @@ public class PackagingManager : MonoBehaviour
         boxWithCan033.SetActive(false);
         boxWithCan05.SetActive(false);
         sticker.SetActive(false);
-        
+
         if (stickerButton != null) stickerButton.interactable = true;
         if (nextButton != null) nextButton.interactable = true;
-        
+
         if (nextButton != null)
         {
             nextButton.onClick.RemoveAllListeners();
             nextButton.onClick.AddListener(() => CheckStage());
             Debug.Log("кнопка Next привязана к CheckStage");
         }
-        
+
         if (stickerButton != null)
         {
             stickerButton.onClick.RemoveAllListeners();
             stickerButton.onClick.AddListener(() => ApplySticker());
             Debug.Log("кнопка Sticker привязана к ApplySticker");
         }
-        
+
         Transform panel = GameObject.Find("InventoryPanel")?.transform;
         if (panel != null && Inventory.Instance != null)
         {
             Inventory.Instance.SetInventoryPanel(panel);
         }
-        
+
         Debug.Log("PackagingManager Start: inventory = " + (inventory != null ? "найден" : "null"));
     }
-    
+
     public void OnBoxClick()
     {
         Debug.Log("OnBoxClick вызван");
-        
+
         if (inventory == null)
         {
             inventory = FindAnyObjectByType<Inventory>();
             if (inventory == null)
             {
-                Debug.LogError("Inventory не найден!");
+                Debug.LogError("Inventory не найден");
                 return;
             }
         }
-        
+
         if (isPacked)
         {
             Debug.Log("уже упаковано");
             return;
         }
-        
+
         int selectedSlot = inventory.GetSelectedSlot();
         Debug.Log($"выбранный слот: {selectedSlot}");
-        
+
         if (selectedSlot == -1)
         {
             Debug.Log("сначала выберите тару в инвентаре");
             StartCoroutine(ShowErrorWithDelay("Сначала выберите тару в инвентаре!"));
             return;
         }
-        
+
         if (selectedSlot >= inventory.items.Count)
         {
             Debug.Log($"слот {selectedSlot} вне диапазона");
             return;
         }
-        
+
         var item = inventory.items[selectedSlot].itemData;
         if (item == null)
         {
             Debug.Log("в выбранном слоте нет предмета");
             return;
         }
-        
+
         switch (item.itemType)
         {
             case ItemType.GlassBottle033:
@@ -172,103 +172,103 @@ public class PackagingManager : MonoBehaviour
                 StartCoroutine(ShowErrorWithDelay("Этот предмет нельзя упаковать!"));
                 return;
         }
-        
+
         inventory.ClearSlot(selectedSlot);
         inventory.SelectSlot(-1);
-        
+
         isPacked = true;
-        
+
         Debug.Log($"упакована тара: {item.itemName} (тип: {packedType})");
     }
-    
+
     public void ApplySticker()
     {
         Debug.Log("ApplySticker вызван");
-        
+
         if (!isPacked)
         {
             StartCoroutine(ShowErrorWithDelay("Сначала упакуйте товар!"));
             return;
         }
-        
+
         if (hasLabel) return;
-        
+
         hasLabel = true;
         sticker.SetActive(true);
-        
+
         Debug.Log("этикетка наклеена");
     }
-    
+
     public void CheckStage()
-{
-    Debug.Log($"CheckStage");
-    Debug.Log($"isPacked={isPacked}, hasLabel={hasLabel}, packedType={packedType}, expectedPackedType={expectedPackedType}");
-    
-    if (!isPacked)
     {
-        Debug.Log("ОШИБКА: не упаковано");
-        if (ErrorManager.Instance != null)
-            ErrorManager.Instance.AddError("Упаковка: попытка завершить без упаковки");
+        Debug.Log($"CheckStage");
+        Debug.Log($"isPacked={isPacked}, hasLabel={hasLabel}, packedType={packedType}, expectedPackedType={expectedPackedType}");
+
+        if (!isPacked)
+        {
+            Debug.Log("ОШИБКА: не упаковано");
+            if (ErrorManager.Instance != null)
+                ErrorManager.Instance.AddError("Упаковка: попытка завершить без упаковки");
             StartCoroutine(ShowErrorWithDelay("Сначала упакуйте товар!"));
-        return;
-    }
-    Debug.Log("упаковано");
-    
-    if (!hasLabel)
-    {
-        Debug.Log("ошибка нет этикетки");
-        if (ErrorManager.Instance != null)
-            ErrorManager.Instance.AddError("Упаковка: попытка завершить без этикетки");
+            return;
+        }
+        Debug.Log("упаковано");
+
+        if (!hasLabel)
+        {
+            Debug.Log("ошибка нет этикетки");
+            if (ErrorManager.Instance != null)
+                ErrorManager.Instance.AddError("Упаковка: попытка завершить без этикетки");
             StartCoroutine(ShowErrorWithDelay("Сначала наклейте этикетку"));
-        return;
-    }
-    Debug.Log("этикетка есть");
-    
-    if (packedType != expectedPackedType)
-    {
-        Debug.Log($"ошибка неверная тара ({packedType} != {expectedPackedType})");
-        if (ErrorManager.Instance != null)
-            ErrorManager.Instance.AddError($"Упаковка: выбрана неверная тара ({packedType}). Нужна {expectedPackedType}");
+            return;
+        }
+        Debug.Log("этикетка есть");
+
+        if (packedType != expectedPackedType)
+        {
+            Debug.Log($"ошибка неверная тара ({packedType} != {expectedPackedType})");
+            if (ErrorManager.Instance != null)
+                ErrorManager.Instance.AddError($"Упаковка: выбрана неверная тара ({packedType}). Нужна {expectedPackedType}");
             StartCoroutine(ShowErrorWithDelay($"Упакована неправильная тара! Нужна бутылка 0.5л."));
-        return;
+            return;
+        }
+        Debug.Log("тара правильная");
+
+        Debug.Log("всё верно, ShowSuccess");
+
+        if (Inventory.Instance != null)
+            Inventory.Instance.SaveItems();
+
+        StartCoroutine(ShowSuccessWithDelay());
+        Debug.Log("активация панели вручную");
+        uiManager.successPanel.SetActive(true);
     }
-    Debug.Log("тара правильная");
-    
-    Debug.Log("всё верно, ShowSuccess");
-    
-    if (Inventory.Instance != null)
-        Inventory.Instance.SaveItems();
-    
-    StartCoroutine(ShowSuccessWithDelay()); 
-    Debug.Log("активация панели вручную");
-    uiManager.successPanel.SetActive(true);
-}
 
-IEnumerator ShowSuccessWithDelay()
-{
-    yield return new WaitForSeconds(0.2f);
-    
-    if (uiManager == null)
-        uiManager = FindAnyObjectByType<UIManager>();
-    
-    if (uiManager != null)
-        uiManager.ShowSuccess("Упаковка пройдена!", nextScene, stageName);
-}
+    IEnumerator ShowSuccessWithDelay()
+    {
+        yield return new WaitForSeconds(0.2f);
 
-IEnumerator ShowErrorWithDelay(string message)
-{
-    yield return new WaitForSeconds(0.2f);
-    if (UIManager.Instance != null)
-        UIManager.Instance.ShowError(message, stageName);
-}
-    
+        if (uiManager == null)
+            uiManager = FindAnyObjectByType<UIManager>();
+
+        if (uiManager != null)
+            uiManager.ShowSuccess("Упаковка пройдена!", nextScene, stageName);
+    }
+
+    IEnumerator ShowErrorWithDelay(string message)
+    {
+        yield return new WaitForSeconds(0.2f);
+        if (UIManager.Instance != null)
+            UIManager.Instance.ShowError(message, stageName);
+    }
+
     public void NextScene()
     {
         Debug.Log($"NextScene() вызван на этапе {stageName}");
-        
+
         if (Inventory.Instance != null)
             Inventory.Instance.SaveItems();
-        
+
         SceneManager.LoadScene(nextScene);
     }
 }
