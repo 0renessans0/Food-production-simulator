@@ -27,6 +27,13 @@ public class FermentationManager : MonoBehaviour
         timeMax = PlayerPrefs.GetInt("TimeMax", 7);
         Debug.Log($"Параметры брожения из БД: {tempMin}-{tempMax}°C, {timeMin}-{timeMax} дней");
 
+        if (temperatureSlider != null)
+            temperatureSlider.value = 0f;
+
+        if (timeSlider != null)
+            timeSlider.value = 0f;
+
+
         Debug.Log("сцена брожения");
 
         if (uiManager == null)

@@ -28,5 +28,5 @@ public enum ItemType
     GlassBottle05,
     MetalCan033,
     MetalCan05,
-    GlassBottle1, 
+    GlassBottle1,
 }
